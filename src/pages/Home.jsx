@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, ArrowLeft, Sparkles, Search } from 'lucide-react';
+import { Building2, ArrowLeft, Sparkles, Search, X, ChevronRight, MapPin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 import ImageUploader from '../components/building/ImageUploader';
 import AnalysisResult from '../components/building/AnalysisResult';
@@ -13,10 +17,19 @@ import RentalAnalysis from '../components/building/RentalAnalysis';
 import ZoningInfo from '../components/building/ZoningInfo';
 import InvestmentScore from '../components/building/InvestmentScore';
 
+// Fix leaflet marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   const { data: recentAnalyses = [], refetch } = useQuery({
     queryKey: ['building-analyses'],
@@ -138,144 +151,210 @@ export default function Home() {
     setAnalysisData(null);
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-      {/* Background grid */}
-      <div 
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
-        }}
-      />
-      
-      {/* Ambient glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/5 rounded-full blur-[120px]" />
+  // Upload screen
+  if (!showResult) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* Background grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }}
+        />
+        
+        {/* Ambient glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/5 rounded-full blur-[120px]" />
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 sm:py-12">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
-        >
-          {showResult && (
-            <motion.button
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={handleBack}
-              className="absolute left-4 top-8 sm:top-12 flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm">돌아가기</span>
-            </motion.button>
-          )}
-          
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <Building2 className="w-6 h-6 text-black" />
-            </div>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
-            빌딩 스캐너
-          </h1>
-          <p className="text-white/40 text-sm sm:text-base max-w-md mx-auto">
-            건물 사진 한 장으로 스펙과 시세를 AI가 분석합니다
-          </p>
-        </motion.div>
-
-        <AnimatePresence mode="wait">
-          {!showResult ? (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              <ImageUploader
-                onImageSelected={handleImageSelected}
-                isAnalyzing={isAnalyzing}
-              />
-
-              {/* Feature pills */}
-              <div className="flex flex-wrap justify-center gap-3">
-                {['건물 유형 분석', '추정 시세', '주변 환경', '투자 가치'].map((text, i) => (
-                  <motion.div
-                    key={text}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + (i * 0.05) }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10"
-                  >
-                    <Sparkles className="w-3 h-3 text-amber-400/60" />
-                    <span className="text-white/50 text-xs">{text}</span>
-                  </motion.div>
-                ))}
+        <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 sm:py-12">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-10"
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <Building2 className="w-6 h-6 text-black" />
               </div>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
+              빌딩 스캐너
+            </h1>
+            <p className="text-white/40 text-sm sm:text-base max-w-md mx-auto">
+              건물 사진 한 장으로 스펙과 시세를 AI가 분석합니다
+            </p>
+          </motion.div>
 
-              <RecentAnalyses
-                analyses={recentAnalyses}
-                onSelect={handleSelectRecent}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Uploaded image */}
-              {analysisData?.image_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8"
+          >
+            <ImageUploader
+              onImageSelected={handleImageSelected}
+              isAnalyzing={isAnalyzing}
+            />
+
+            <div className="flex flex-wrap justify-center gap-3">
+              {['건물 유형 분석', '추정 시세', '주변 환경', '투자 가치'].map((text, i) => (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="rounded-2xl overflow-hidden border border-white/10"
+                  key={text}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + (i * 0.05) }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10"
                 >
+                  <Sparkles className="w-3 h-3 text-amber-400/60" />
+                  <span className="text-white/50 text-xs">{text}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <RecentAnalyses
+              analyses={recentAnalyses}
+              onSelect={handleSelectRecent}
+            />
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Result screen with full map
+  return (
+    <div className="h-screen w-screen relative overflow-hidden bg-slate-900">
+      {/* Full Screen Map */}
+      {analysisData?.latitude && analysisData?.longitude && (
+        <MapContainer
+          center={[analysisData.latitude, analysisData.longitude]}
+          zoom={16}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+          <Marker position={[analysisData.latitude, analysisData.longitude]}>
+            <Popup>
+              <span className="font-medium">{analysisData.building_name || '분석된 건물'}</span>
+            </Popup>
+          </Marker>
+        </MapContainer>
+      )}
+
+      {/* Close Button */}
+      <button
+        onClick={handleBack}
+        className="absolute top-4 left-4 z-[1000] w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-slate-700/90 transition-all"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Panel Toggle when closed */}
+      {!isPanelOpen && (
+        <button
+          onClick={() => setIsPanelOpen(true)}
+          className="absolute top-4 right-4 z-[1000] px-4 py-2.5 rounded-xl bg-white text-slate-900 font-semibold hover:bg-white/90 transition-all shadow-lg"
+        >
+          Results
+        </button>
+      )}
+
+      {/* Right Side Panel */}
+      <AnimatePresence>
+        {isPanelOpen && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="absolute top-0 right-0 h-full w-full md:w-[480px] bg-slate-900 shadow-2xl z-[1000] overflow-y-auto"
+          >
+            {/* Panel Header */}
+            <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10 p-4 flex items-center justify-between">
+              <h2 className="text-white font-semibold text-lg">Results</h2>
+              <button
+                onClick={() => setIsPanelOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Section 1: Result - Image & Location */}
+              <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
+                {analysisData?.image_url && (
                   <img
                     src={analysisData.image_url}
-                    alt="분석된 건물"
-                    className="w-full h-56 sm:h-64 object-cover"
+                    alt="분석 이미지"
+                    className="w-full h-48 object-cover"
                   />
-                </motion.div>
-              )}
+                )}
+                <div className="p-4 space-y-3">
+                  <div>
+                    <h3 className="text-white font-semibold text-lg mb-1">
+                      {analysisData?.building_name || '건물 분석'}
+                    </h3>
+                    {analysisData?.address && (
+                      <div className="flex items-start gap-2 text-white/60">
+                        <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span className="text-sm">{analysisData.address}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {analysisData?.latitude && analysisData?.longitude && (
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                      <div>
+                        <p className="text-white/40 text-xs mb-0.5">위도</p>
+                        <p className="text-white text-sm font-mono">{analysisData.latitude.toFixed(6)}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/40 text-xs mb-0.5">경도</p>
+                        <p className="text-white text-sm font-mono">{analysisData.longitude.toFixed(6)}</p>
+                      </div>
+                    </div>
+                  )}
 
-              <MapView
-                latitude={analysisData?.latitude}
-                longitude={analysisData?.longitude}
-                buildingName={analysisData?.building_name}
-              />
-
-              <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
-
-              {analysisData?.investment_score && (
-                <InvestmentScore data={analysisData.investment_score} />
-              )}
-
-              {analysisData?.rental_income && (
-                <RentalAnalysis data={analysisData.rental_income} />
-              )}
-
-              {analysisData?.zoning_info && (
-                <ZoningInfo data={analysisData.zoning_info} />
-              )}
-
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleBack}
-                  variant="outline"
-                  className="bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <Search className="w-4 h-4 mr-2" />
-                  새로운 건물 분석하기
-                </Button>
+                  {analysisData?.confidence && (
+                    <Badge className={`
+                      ${analysisData.confidence === '높음' ? 'bg-green-500/20 text-green-400 border-green-500/20' : ''}
+                      ${analysisData.confidence === '보통' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20' : ''}
+                      ${analysisData.confidence === '낮음' ? 'bg-red-500/20 text-red-400 border-red-500/20' : ''}
+                      border text-xs
+                    `}>
+                      신뢰도: {analysisData.confidence}
+                    </Badge>
+                  )}
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+
+              {/* Section 2: Property Info */}
+              <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
+                <h3 className="text-white font-semibold">매물 정보</h3>
+                
+                <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
+                
+                {analysisData?.rental_income && (
+                  <RentalAnalysis data={analysisData.rental_income} />
+                )}
+                
+                {analysisData?.zoning_info && (
+                  <ZoningInfo data={analysisData.zoning_info} />
+                )}
+                
+                {analysisData?.investment_score && (
+                  <InvestmentScore data={analysisData.investment_score} />
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
