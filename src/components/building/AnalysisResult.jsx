@@ -6,6 +6,7 @@ import {
   Star, TreePine, Shield
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import EditableField from './EditableField';
 
 const InfoCard = ({ icon: Icon, label, value, delay = 0 }) => (
   <motion.div
@@ -24,7 +25,7 @@ const InfoCard = ({ icon: Icon, label, value, delay = 0 }) => (
   </motion.div>
 );
 
-const PriceCard = ({ label, value, icon: Icon, color, delay = 0 }) => (
+const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -37,12 +38,26 @@ const PriceCard = ({ label, value, icon: Icon, color, delay = 0 }) => (
       </div>
       <span className="text-white/50 text-sm">{label}</span>
     </div>
-    <p className="text-white font-bold text-xl">{value || '정보 없음'}</p>
+    {onEdit ? (
+      <EditableField 
+        value={value} 
+        onSave={onEdit}
+        className="text-white font-bold text-xl"
+      />
+    ) : (
+      <p className="text-white font-bold text-xl">{value || '정보 없음'}</p>
+    )}
   </motion.div>
 );
 
-export default function AnalysisResult({ data }) {
+export default function AnalysisResult({ data, onUpdate }) {
   if (!data) return null;
+
+  const handleFieldUpdate = async (field, value) => {
+    if (onUpdate) {
+      await onUpdate({ ...data, [field]: value });
+    }
+  };
 
   const confidenceColors = {
     '높음': 'bg-green-500/20 text-green-400 border-green-500/20',
@@ -88,10 +103,17 @@ export default function AnalysisResult({ data }) {
 
       {/* Price Section */}
       <div>
-        <h3 className="text-white/60 text-sm font-medium mb-3 flex items-center gap-2">
-          <Banknote className="w-4 h-4" />
-          추정 시세
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-white/60 text-sm font-medium flex items-center gap-2">
+            <Banknote className="w-4 h-4" />
+            시세 정보
+          </h3>
+          {data.price_type && (
+            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/20 border text-xs">
+              {data.price_type}
+            </Badge>
+          )}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <PriceCard
             label="매매가"
@@ -99,6 +121,7 @@ export default function AnalysisResult({ data }) {
             icon={Home}
             color="bg-blue-500/20 text-blue-400"
             delay={0.1}
+            onEdit={(v) => handleFieldUpdate('estimated_price_sale', v)}
           />
           <PriceCard
             label="전세가"
@@ -106,6 +129,7 @@ export default function AnalysisResult({ data }) {
             icon={TrendingUp}
             color="bg-emerald-500/20 text-emerald-400"
             delay={0.15}
+            onEdit={(v) => handleFieldUpdate('estimated_price_rent', v)}
           />
           <PriceCard
             label="월세"
@@ -113,6 +137,7 @@ export default function AnalysisResult({ data }) {
             icon={Banknote}
             color="bg-purple-500/20 text-purple-400"
             delay={0.2}
+            onEdit={(v) => handleFieldUpdate('estimated_price_monthly', v)}
           />
         </div>
       </div>

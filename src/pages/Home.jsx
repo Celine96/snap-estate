@@ -31,6 +31,9 @@ export default function Home() {
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `당신은 한국 부동산 전문 AI 분석가입니다. 이 건물 사진을 분석하여 건물의 스펙과 시세 정보를 추정해주세요.
 
+**중요**: 정확한 실거래가 정보를 찾기 위해 인터넷 검색을 적극 활용하세요.
+건물 주소와 관련된 최근 실거래 정보, 부동산 매물 정보를 검색하여 정확한 가격을 제공해주세요.
+
 분석 시 다음 사항을 고려해주세요:
 1. 건물의 외관, 구조, 재질, 디자인을 관찰하여 건물 유형과 건축연도를 추정
 2. 층수와 면적을 추정
@@ -51,6 +54,7 @@ export default function Home() {
         type: "object",
         properties: {
           building_name: { type: "string", description: "건물명 또는 추정 건물명" },
+          price_type: { type: "string", enum: ["최근 실거래가", "신규 호가", "AI 추정가"], description: "가격 정보 유형 - 실거래 정보를 찾았다면 '최근 실거래가', 매물 호가를 찾았다면 '신규 호가', 추정이면 'AI 추정가'" },
           address: { type: "string", description: "추정 주소" },
           district: { type: "string", description: "구/동 정보" },
           building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
@@ -114,6 +118,12 @@ export default function Home() {
   const handleSelectRecent = (item) => {
     setAnalysisData(item);
     setShowResult(true);
+  };
+
+  const handleUpdateAnalysis = async (updatedData) => {
+    await base44.entities.BuildingAnalysis.update(updatedData.id, updatedData);
+    setAnalysisData(updatedData);
+    refetch();
   };
 
   const handleBack = () => {
@@ -231,7 +241,7 @@ export default function Home() {
                 buildingName={analysisData?.building_name}
               />
 
-              <AnalysisResult data={analysisData} />
+              <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
 
               {analysisData?.investment_score && (
                 <InvestmentScore data={analysisData.investment_score} />
