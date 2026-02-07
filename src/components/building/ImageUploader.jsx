@@ -69,9 +69,9 @@ export default function ImageUploader({ onImageSelected, isAnalyzing }) {
                 onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])}
               />
               <div className="flex flex-col items-center gap-4">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-300
-                  ${dragActive ? 'bg-amber-400/20' : 'bg-white/10'}`}>
-                  <Upload className={`w-7 h-7 transition-colors duration-300 ${dragActive ? 'text-amber-400' : 'text-white/60'}`} />
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors duration-300 border
+                  ${dragActive ? 'bg-slate-700 border-slate-600' : 'bg-slate-800 border-slate-700'}`}>
+                  <Upload className={`w-6 h-6 transition-colors duration-300 ${dragActive ? 'text-slate-200' : 'text-slate-400'}`} />
                 </div>
                 <div>
                   <p className="text-white/90 font-medium text-lg mb-1">

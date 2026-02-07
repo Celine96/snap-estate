@@ -182,8 +182,8 @@ export default function Home() {
             className="text-center mb-10"
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                <Building2 className="w-6 h-6 text-black" />
+              <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-slate-300" />
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
@@ -212,10 +212,9 @@ export default function Home() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + (i * 0.05) }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700"
                 >
-                  <Sparkles className="w-3 h-3 text-amber-400/60" />
-                  <span className="text-white/50 text-xs">{text}</span>
+                  <span className="text-slate-300 text-xs font-medium">{text}</span>
                 </motion.div>
               ))}
             </div>

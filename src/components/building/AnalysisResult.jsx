@@ -13,10 +13,10 @@ const InfoCard = ({ icon: Icon, label, value, delay = 0 }) => (
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.3 }}
-    className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.08] transition-colors"
+    className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.05] transition-colors"
   >
-    <div className="w-9 h-9 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0">
-      <Icon className="w-4 h-4 text-amber-400" />
+    <div className="w-8 h-8 rounded-lg bg-slate-700/30 flex items-center justify-center shrink-0">
+      <Icon className="w-3.5 h-3.5 text-slate-400" />
     </div>
     <div className="min-w-0">
       <p className="text-white/40 text-xs mb-0.5">{label}</p>
@@ -30,11 +30,11 @@ const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit }) => (
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.3 }}
-    className="p-4 rounded-xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10"
+    className="p-4 rounded-xl bg-white/[0.03] border border-white/10"
   >
     <div className="flex items-center gap-2 mb-2">
-      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon className="w-3.5 h-3.5" />
+      <div className={`w-5 h-5 rounded flex items-center justify-center ${color}`}>
+        <Icon className="w-3 h-3" />
       </div>
       <span className="text-white/70 text-sm font-medium">{label}</span>
     </div>
@@ -119,7 +119,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             label="매매가"
             value={data.estimated_price_sale}
             icon={Home}
-            color="bg-blue-500/20 text-blue-400"
+            color="bg-slate-700/50 text-slate-300"
             delay={0.1}
             onEdit={(v) => handleFieldUpdate('estimated_price_sale', v)}
           />
@@ -127,7 +127,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             label="전세가"
             value={data.estimated_price_rent}
             icon={TrendingUp}
-            color="bg-emerald-500/20 text-emerald-400"
+            color="bg-slate-700/50 text-slate-300"
             delay={0.15}
             onEdit={(v) => handleFieldUpdate('estimated_price_rent', v)}
           />
@@ -135,7 +135,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             label="월세"
             value={data.estimated_price_monthly}
             icon={Banknote}
-            color="bg-purple-500/20 text-purple-400"
+            color="bg-slate-700/50 text-slate-300"
             delay={0.2}
             onEdit={(v) => handleFieldUpdate('estimated_price_monthly', v)}
           />
@@ -148,11 +148,11 @@ export default function AnalysisResult({ data, onUpdate }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="p-4 rounded-xl bg-gradient-to-r from-amber-400/5 to-transparent border border-amber-400/10"
+          className="p-4 rounded-xl bg-white/[0.03] border border-white/10"
         >
           <div className="flex items-center gap-2 mb-2">
-            <ArrowUpRight className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400 text-sm font-medium">시세 동향</span>
+            <TrendingUp className="w-4 h-4 text-slate-400" />
+            <span className="text-white/70 text-sm font-medium">시세 동향</span>
           </div>
           <p className="text-white/70 text-sm leading-relaxed">{data.price_trend}</p>
         </motion.div>
