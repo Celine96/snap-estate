@@ -331,7 +331,7 @@ export default function Home() {
                     )}
                     <div className="p-4 space-y-3">
                       <div>
-                        <h3 className="text-white font-semibold text-lg mb-1">
+                        <h3 className="text-white font-semibold text-base mb-1">
                           {analysisData?.building_name || '건물 분석'}
                         </h3>
                         {analysisData?.address && (

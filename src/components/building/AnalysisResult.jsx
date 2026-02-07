@@ -42,10 +42,10 @@ const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit }) => (
       <EditableField 
         value={value} 
         onSave={onEdit}
-        className="text-white font-bold text-xl"
+        className="text-white font-bold text-base"
       />
     ) : (
-      <p className="text-white font-bold text-xl">{value || '정보 없음'}</p>
+      <p className="text-white font-bold text-base">{value || '정보 없음'}</p>
     )}
   </motion.div>
 );
@@ -78,7 +78,7 @@ export default function AnalysisResult({ data, onUpdate }) {
           <motion.h2
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-bold text-white mb-1"
+            className="text-lg font-bold text-white mb-1"
           >
             {data.building_name || '건물 분석 결과'}
           </motion.h2>
