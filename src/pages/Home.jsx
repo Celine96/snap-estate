@@ -368,10 +368,9 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Location Accuracy Evaluation - Show only if confidence is not '높음' */}
-                  {analysisData?.confidence !== '높음' && (
-                    <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3">
-                      <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
+                  {/* Location Accuracy Evaluation */}
+                  <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3">
+                    <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => handleLocationAccuracy('incorrect')}
@@ -408,7 +407,6 @@ export default function Home() {
                         </button>
                       </div>
                     </div>
-                  )}
                 </div>
               )}
 
