@@ -30,22 +30,22 @@ const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit }) => (
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.3 }}
-    className="p-5 rounded-xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10"
+    className="p-4 rounded-xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10"
   >
-    <div className="flex items-center gap-2 mb-3">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon className="w-4 h-4" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${color}`}>
+        <Icon className="w-3.5 h-3.5" />
       </div>
-      <span className="text-white/50 text-sm">{label}</span>
+      <span className="text-white/70 text-sm font-medium">{label}</span>
     </div>
     {onEdit ? (
       <EditableField 
         value={value} 
         onSave={onEdit}
-        className="text-white font-bold text-base"
+        className="text-white font-semibold text-sm leading-relaxed"
       />
     ) : (
-      <p className="text-white font-bold text-base">{value || '정보 없음'}</p>
+      <p className="text-white font-semibold text-sm leading-relaxed whitespace-pre-line">{value || '정보 없음'}</p>
     )}
   </motion.div>
 );
