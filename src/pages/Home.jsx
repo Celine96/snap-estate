@@ -30,6 +30,7 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState('results');
 
   const { data: recentAnalyses = [], refetch } = useQuery({
     queryKey: ['building-analyses'],
@@ -142,6 +143,13 @@ export default function Home() {
 
   const handleUpdateAnalysis = async (updatedData) => {
     await base44.entities.BuildingAnalysis.update(updatedData.id, updatedData);
+    setAnalysisData(updatedData);
+    refetch();
+  };
+
+  const handleLocationAccuracy = async (accuracy) => {
+    const updatedData = { ...analysisData, location_accuracy: accuracy };
+    await base44.entities.BuildingAnalysis.update(analysisData.id, updatedData);
     setAnalysisData(updatedData);
     refetch();
   };
@@ -273,84 +281,155 @@ export default function Home() {
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="absolute top-0 right-0 h-full w-full md:w-[480px] bg-slate-900 shadow-2xl z-[1000] overflow-y-auto"
           >
-            {/* Panel Header */}
-            <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10 p-4 flex items-center justify-between">
-              <h2 className="text-white font-semibold text-lg">Results</h2>
-              <button
-                onClick={() => setIsPanelOpen(false)}
-                className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+            {/* Panel Header with Tabs */}
+            <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10">
+              <div className="flex items-center justify-between p-4 pb-0">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveTab('results')}
+                    className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
+                      activeTab === 'results'
+                        ? 'bg-white text-slate-900'
+                        : 'text-white/60 hover:text-white/80'
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4 inline mr-1" />
+                    Results
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('property')}
+                    className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
+                      activeTab === 'property'
+                        ? 'bg-white text-slate-900'
+                        : 'text-white/60 hover:text-white/80'
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4 inline mr-1" />
+                    매물 정보
+                  </button>
+                </div>
+                <button
+                  onClick={() => setIsPanelOpen(false)}
+                  className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-4 space-y-4">
-              {/* Section 1: Result - Image & Location */}
-              <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
-                {analysisData?.image_url && (
-                  <img
-                    src={analysisData.image_url}
-                    alt="분석 이미지"
-                    className="w-full h-48 object-cover"
-                  />
-                )}
-                <div className="p-4 space-y-3">
-                  <div>
-                    <h3 className="text-white font-semibold text-lg mb-1">
-                      {analysisData?.building_name || '건물 분석'}
-                    </h3>
-                    {analysisData?.address && (
-                      <div className="flex items-start gap-2 text-white/60">
-                        <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-                        <span className="text-sm">{analysisData.address}</span>
-                      </div>
+              {/* Results Tab Content */}
+              {activeTab === 'results' && (
+                <div className="space-y-4">
+                  <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
+                    {analysisData?.image_url && (
+                      <img
+                        src={analysisData.image_url}
+                        alt="분석 이미지"
+                        className="w-full h-48 object-cover"
+                      />
                     )}
-                  </div>
-                  
-                  {analysisData?.latitude && analysisData?.longitude && (
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                    <div className="p-4 space-y-3">
                       <div>
-                        <p className="text-white/40 text-xs mb-0.5">위도</p>
-                        <p className="text-white text-sm font-mono">{analysisData.latitude.toFixed(6)}</p>
+                        <h3 className="text-white font-semibold text-lg mb-1">
+                          {analysisData?.building_name || '건물 분석'}
+                        </h3>
+                        {analysisData?.address && (
+                          <div className="flex items-start gap-2 text-white/60">
+                            <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+                            <span className="text-sm">{analysisData.address}</span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-white/40 text-xs mb-0.5">경도</p>
-                        <p className="text-white text-sm font-mono">{analysisData.longitude.toFixed(6)}</p>
+                      
+                      {analysisData?.latitude && analysisData?.longitude && (
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                          <div>
+                            <p className="text-white/40 text-xs mb-0.5">위도</p>
+                            <p className="text-white text-sm font-mono">{analysisData.latitude.toFixed(6)}</p>
+                          </div>
+                          <div>
+                            <p className="text-white/40 text-xs mb-0.5">경도</p>
+                            <p className="text-white text-sm font-mono">{analysisData.longitude.toFixed(6)}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {analysisData?.confidence && (
+                        <Badge className={`
+                          ${analysisData.confidence === '높음' ? 'bg-green-500/20 text-green-400 border-green-500/20' : ''}
+                          ${analysisData.confidence === '보통' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20' : ''}
+                          ${analysisData.confidence === '낮음' ? 'bg-red-500/20 text-red-400 border-red-500/20' : ''}
+                          border text-xs
+                        `}>
+                          신뢰도: {analysisData.confidence}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Location Accuracy Evaluation - Show only if confidence is not '높음' */}
+                  {analysisData?.confidence !== '높음' && (
+                    <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3">
+                      <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => handleLocationAccuracy('incorrect')}
+                          className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
+                            analysisData?.location_accuracy === 'incorrect'
+                              ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                              : 'border-white/10 text-white/60 hover:border-white/30 hover:text-white/80'
+                          }`}
+                        >
+                          <X className="w-5 h-5" />
+                          <span className="text-xs font-medium">부정확</span>
+                        </button>
+                        <button
+                          onClick={() => handleLocationAccuracy('nearby')}
+                          className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
+                            analysisData?.location_accuracy === 'nearby'
+                              ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                              : 'border-white/10 text-white/60 hover:border-white/30 hover:text-white/80'
+                          }`}
+                        >
+                          <MapPin className="w-5 h-5" />
+                          <span className="text-xs font-medium">근처</span>
+                        </button>
+                        <button
+                          onClick={() => handleLocationAccuracy('accurate')}
+                          className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
+                            analysisData?.location_accuracy === 'accurate'
+                              ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                              : 'border-white/10 text-white/60 hover:border-white/30 hover:text-white/80'
+                          }`}
+                        >
+                          <Building2 className="w-5 h-5" />
+                          <span className="text-xs font-medium">정확</span>
+                        </button>
                       </div>
                     </div>
                   )}
+                </div>
+              )}
 
-                  {analysisData?.confidence && (
-                    <Badge className={`
-                      ${analysisData.confidence === '높음' ? 'bg-green-500/20 text-green-400 border-green-500/20' : ''}
-                      ${analysisData.confidence === '보통' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20' : ''}
-                      ${analysisData.confidence === '낮음' ? 'bg-red-500/20 text-red-400 border-red-500/20' : ''}
-                      border text-xs
-                    `}>
-                      신뢰도: {analysisData.confidence}
-                    </Badge>
+              {/* Property Info Tab Content */}
+              {activeTab === 'property' && (
+                <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
+                  <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
+                  
+                  {analysisData?.rental_income && (
+                    <RentalAnalysis data={analysisData.rental_income} />
+                  )}
+                  
+                  {analysisData?.zoning_info && (
+                    <ZoningInfo data={analysisData.zoning_info} />
+                  )}
+                  
+                  {analysisData?.investment_score && (
+                    <InvestmentScore data={analysisData.investment_score} />
                   )}
                 </div>
-              </div>
-
-              {/* Section 2: Property Info */}
-              <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
-                <h3 className="text-white font-semibold">매물 정보</h3>
-                
-                <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
-                
-                {analysisData?.rental_income && (
-                  <RentalAnalysis data={analysisData.rental_income} />
-                )}
-                
-                {analysisData?.zoning_info && (
-                  <ZoningInfo data={analysisData.zoning_info} />
-                )}
-                
-                {analysisData?.investment_score && (
-                  <InvestmentScore data={analysisData.investment_score} />
-                )}
-              </div>
+              )}
             </div>
           </motion.div>
         )}
