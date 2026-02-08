@@ -162,8 +162,18 @@ Deno.serve(async (req) => {
       numOfRows: '100'
     });
 
+    console.log('API 호출:', {
+      url,
+      sigunguCode,
+      dealYmd,
+      buildingType,
+      buildingName
+    });
+
     const response = await fetch(`${url}?${params}`);
     const xmlText = await response.text();
+    
+    console.log('API 응답 샘플:', xmlText.substring(0, 500));
 
     // XML 파싱
     const items = [];
