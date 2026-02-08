@@ -51,17 +51,52 @@ export default function Home() {
       console.log('위치 추출 실패:', error);
     }
     
-    // 2단계: 기본 정보 추출 (정확도 개선)
+    // 2단계: GPS 좌표로 정확한 주소 찾기 (역지오코딩)
+    let addressFromGPS = null;
+    if (locationData?.latitude && locationData?.longitude) {
+      try {
+        const geoResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `다음 GPS 좌표의 정확한 도로명 주소와 지번 주소를 찾아주세요:
+위도: ${locationData.latitude}
+경도: ${locationData.longitude}
+
+네이버 지도나 카카오맵에서 이 좌표를 검색하고, 정확한 주소를 반환하세요.
+반드시 "서울특별시 XX구 XX동" 형식으로 시작해야 합니다.`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              road_address: { type: "string", description: "도로명 주소 (예: 서울특별시 강남구 테헤란로 123)" },
+              jibun_address: { type: "string", description: "지번 주소 (예: 서울특별시 강남구 역삼동 123-45)" },
+              district: { type: "string", description: "구 (예: 강남구)" },
+              dong: { type: "string", description: "동 (예: 역삼동)" }
+            }
+          }
+        });
+        addressFromGPS = geoResult;
+        console.log('GPS 역지오코딩 성공:', geoResult);
+      } catch (error) {
+        console.log('GPS 역지오코딩 실패:', error);
+      }
+    }
+    
+    // 3단계: 기본 정보 추출 (GPS 주소 활용)
     const basicInfo = await base44.integrations.Core.InvokeLLM({
       prompt: `당신은 한국 부동산 전문가입니다. 이 건물 사진을 매우 정확하게 분석하세요.
 
-${locationData ? `
+${addressFromGPS ? `
+🎯 GPS 좌표로 확인된 정확한 주소:
+- 도로명 주소: ${addressFromGPS.road_address}
+- 지번 주소: ${addressFromGPS.jibun_address}
+- 지역: ${addressFromGPS.district} ${addressFromGPS.dong}
+
+이 주소를 기준으로 분석하세요. 사진 속 건물명을 찾아주세요.
+` : locationData ? `
 🎯 GPS 좌표 감지됨:
 - 위도: ${locationData.latitude}
 - 경도: ${locationData.longitude}
-- 신뢰도: ${locationData.confidence}
 
-이 좌표를 네이버 지도/카카오맵에서 검색하여 정확한 건물을 찾으세요.
+이 좌표 주변의 건물을 찾으세요.
 ` : ''}
 
 📋 분석 단계별 체크리스트:
@@ -90,9 +125,9 @@ ${locationData ? `
       response_json_schema: {
         type: "object",
         properties: {
-          address: { type: "string", description: "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
+          address: { type: "string", description: addressFromGPS ? "GPS 주소 기반 확인된 전체 주소" : "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
           building_name: { type: "string", description: "정확한 건물명 (간판 그대로)" },
-          district: { type: "string", description: "구/동 (예: 강남구, 역삼동)" },
+          district: { type: "string", description: addressFromGPS ? `${addressFromGPS.district}` : "구/동 (예: 강남구, 역삼동)" },
           building_type: { 
             type: "string", 
             enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
@@ -103,13 +138,16 @@ ${locationData ? `
       }
     });
 
-    // 3단계: 실거래가 조회 (Backend Function - 건물 유형 포함)
+    // 4단계: 실거래가 조회 (GPS 주소 우선 사용)
     let realPriceData = null;
     let priceType = "AI 추정가";
     
+    const searchAddress = addressFromGPS?.jibun_address || basicInfo.address;
+    console.log('실거래가 검색 주소:', searchAddress);
+    
     try {
       const realPrice = await base44.functions.getRealEstatePrice({
-        address: basicInfo.address,
+        address: searchAddress,
         buildingName: basicInfo.building_name,
         buildingType: basicInfo.building_type
       });
@@ -122,13 +160,19 @@ ${locationData ? `
       console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
     }
 
-    // 4단계: 상세 분석 (통합 정확도 개선)
+    // 5단계: 상세 분석 (GPS 주소 활용)
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다. 
 이 건물을 매우 정확하게 분석하여 실제 시세에 가깝게 평가하세요.
 
 📍 **확인된 건물 정보:**
+${addressFromGPS ? `
+- ✅ GPS 확정 주소: ${addressFromGPS.jibun_address}
+- ✅ 도로명: ${addressFromGPS.road_address}
+- ✅ 지역: ${addressFromGPS.district} ${addressFromGPS.dong}
+` : `
 - 주소: ${basicInfo.address}
+`}
 - 건물명: ${basicInfo.building_name}
 - 건물 유형: ${basicInfo.building_type}
 - 지역: ${basicInfo.district}
@@ -235,7 +279,7 @@ ${realPriceData ? `
     const savedData = {
       image_url: file_url,
       building_name: basicInfo.building_name,
-      address: basicInfo.address,
+      address: addressFromGPS?.jibun_address || basicInfo.address,
       district: basicInfo.district,
       building_type: basicInfo.building_type,
       price_type: priceType,
