@@ -145,11 +145,33 @@ ${addressFromGPS ? `
     const searchAddress = addressFromGPS?.jibun_address || basicInfo.address;
     console.log('실거래가 검색 주소:', searchAddress);
     
+    // AI 추정 건축연도/면적 빠른 추출 (실거래가 매칭용)
+    let quickEstimates = null;
+    try {
+      quickEstimates = await base44.integrations.Core.InvokeLLM({
+        prompt: `사진 속 건물의 건축연도와 대략적인 면적을 추정하세요:
+- 건축연도: 외관 상태, 건축 스타일로 판단
+- 면적: 층수 × 층당 면적으로 대략 계산 (평 단위)`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            year: { type: "string", description: "추정 건축연도 (예: 1995)" },
+            area_pyeong: { type: "number", description: "추정 면적(평)" }
+          }
+        }
+      });
+    } catch (e) {
+      console.log('빠른 추정 실패:', e);
+    }
+    
     try {
       const realPrice = await base44.functions.getRealEstatePrice({
         address: searchAddress,
         buildingName: basicInfo.building_name,
-        buildingType: basicInfo.building_type
+        buildingType: basicInfo.building_type,
+        estimatedYear: quickEstimates?.year,
+        estimatedArea: quickEstimates?.area_pyeong
       });
       
       if (realPrice.data?.success && realPrice.data.data && realPrice.data.data.length > 0) {

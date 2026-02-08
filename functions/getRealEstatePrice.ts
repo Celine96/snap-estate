@@ -5,12 +5,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * @param {string} address - 검색할 주소
  * @param {string} buildingName - 건물명
  * @param {string} buildingType - 건물 유형 (아파트/오피스텔/상가/빌라/기타)
+ * @param {string} estimatedYear - AI 추정 건축연도 (선택)
+ * @param {number} estimatedArea - AI 추정 면적(평) (선택)
  */
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { address, buildingName, buildingType } = await req.json();
+    const { address, buildingName, buildingType, estimatedYear, estimatedArea } = await req.json();
     
     const apiKey = Deno.env.get('Decoding_Api_Key');
     
@@ -241,22 +243,70 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 최신순 정렬
-    items.sort((a, b) => {
-      const dateA = new Date(a.거래일);
-      const dateB = new Date(b.거래일);
-      return dateB - dateA;
-    });
+    // 주소에서 동 추출 (예: "서울특별시 강남구 삼성동" -> "삼성동")
+    const dongMatch = address.match(/([가-힣]+동|[가-힣]+읍|[가-힣]+면)/);
+    const targetDong = dongMatch ? dongMatch[1] : null;
 
-    // 건물명으로 필터링 (검색어가 있을 경우)
+    console.log('추출된 동:', targetDong);
+
+    // 1단계: 법정동 필터링
     let filteredItems = items;
+    if (targetDong) {
+      const dongFiltered = items.filter(item => {
+        const itemDong = item.법정동 || '';
+        return itemDong.includes(targetDong) || targetDong.includes(itemDong);
+      });
+      
+      if (dongFiltered.length > 0) {
+        filteredItems = dongFiltered;
+        console.log(`법정동 필터: ${items.length}건 → ${filteredItems.length}건 (${targetDong})`);
+      }
+    }
+
+    // 2단계: 건물명 필터링 (있을 경우)
     if (buildingName && buildingName.length > 1) {
-      filteredItems = items.filter(item => {
+      const nameFiltered = filteredItems.filter(item => {
         const name = item.건물명 || '';
         return name.includes(buildingName) || buildingName.includes(name);
       });
       
-      console.log(`건물명 필터 결과: ${items.length}건 → ${filteredItems.length}건 (검색어: ${buildingName})`);
+      if (nameFiltered.length > 0) {
+        filteredItems = nameFiltered;
+        console.log(`건물명 필터: → ${filteredItems.length}건 (검색어: ${buildingName})`);
+      }
+    }
+
+    // 3단계: 유사도 점수 계산 (건축연도 + 면적)
+    if (estimatedYear || estimatedArea) {
+      filteredItems = filteredItems.map(item => {
+        let score = 0;
+        
+        // 건축연도 유사도 (차이가 적을수록 높은 점수)
+        if (estimatedYear && item.건축연도) {
+          const yearDiff = Math.abs(parseInt(estimatedYear) - parseInt(item.건축연도));
+          score += Math.max(0, 100 - yearDiff * 2); // 연도 차이 1년당 -2점
+        }
+        
+        // 면적 유사도 (평 단위)
+        if (estimatedArea && item.전용면적) {
+          const itemPyeong = parseFloat(item.전용면적) * 0.3025; // ㎡ → 평
+          const areaDiff = Math.abs(estimatedArea - itemPyeong);
+          score += Math.max(0, 100 - areaDiff * 2); // 평 차이 1평당 -2점
+        }
+        
+        return { ...item, _similarityScore: score };
+      });
+
+      // 유사도 점수로 정렬
+      filteredItems.sort((a, b) => (b._similarityScore || 0) - (a._similarityScore || 0));
+      console.log('상위 3개 유사도:', filteredItems.slice(0, 3).map(x => x._similarityScore));
+    } else {
+      // 유사도 계산 없으면 최신순 정렬
+      filteredItems.sort((a, b) => {
+        const dateA = new Date(a.거래일);
+        const dateB = new Date(b.거래일);
+        return dateB - dateA;
+      });
     }
 
     return Response.json({
@@ -265,6 +315,7 @@ Deno.serve(async (req) => {
       buildingType: buildingType,
       totalCount: items.length,
       filteredCount: filteredItems.length,
+      matchingStrategy: targetDong ? '법정동+유사도 매칭' : '유사도 매칭',
       data: filteredItems.slice(0, 10)
     });
 
