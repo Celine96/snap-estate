@@ -42,45 +42,68 @@ export default function Home() {
     
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     
-    // 1단계: 기본 정보 추출
+    // 1단계: 위치 정보 추출 (EXIF GPS 우선)
+    let locationData = null;
+    try {
+      const location = await base44.functions.getImageLocation({ imageUrl: file_url });
+      locationData = location;
+    } catch (error) {
+      console.log('위치 추출 실패:', error);
+    }
+    
+    // 2단계: 기본 정보 추출
     const basicInfo = await base44.integrations.Core.InvokeLLM({
-      prompt: `이 건물 사진을 분석하여 주소와 건물명을 추정해주세요.
-      
-정확한 주소와 건물명을 찾는 것이 최우선입니다:
+      prompt: `이 건물 사진을 분석하여 주소, 건물명, 건물 유형을 추정해주세요.
+
+${locationData ? `
+참고: GPS 좌표가 감지되었습니다.
+- 위도: ${locationData.latitude}
+- 경도: ${locationData.longitude}
+- 신뢰도: ${locationData.confidence}
+이 좌표 주변의 건물을 검색하세요.
+` : ''}
+
+정확한 정보를 찾기 위해:
 - 간판, 표지판, 건물 외관의 텍스트를 주의깊게 읽으세요
 - 주변 랜드마크나 특징을 파악하세요
-- 건축 스타일, 시대, 위치를 고려하세요`,
+- 네이버/카카오 지도에서 해당 위치의 건물을 검색하세요`,
       file_urls: [file_url],
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
         properties: {
-          address: { type: "string", description: "추정 주소 (구까지 포함)" },
-          building_name: { type: "string", description: "건물명" },
-          district: { type: "string", description: "구/동" }
+          address: { type: "string", description: "정확한 주소 (시/구/동까지)" },
+          building_name: { type: "string", description: "정확한 건물명" },
+          district: { type: "string", description: "구/동" },
+          building_type: { 
+            type: "string", 
+            enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
+            description: "건물 유형" 
+          }
         }
       }
     });
 
-    // 2단계: 실거래가 조회 (Backend Function)
+    // 3단계: 실거래가 조회 (Backend Function - 건물 유형 포함)
     let realPriceData = null;
     let priceType = "AI 추정가";
     
     try {
       const realPrice = await base44.functions.getRealEstatePrice({
         address: basicInfo.address,
-        buildingName: basicInfo.building_name
+        buildingName: basicInfo.building_name,
+        buildingType: basicInfo.building_type
       });
       
-      if (realPrice.success && realPrice.data && realPrice.data.length > 0) {
-        realPriceData = realPrice.data[0]; // 최신 거래
+      if (realPrice.data?.success && realPrice.data.data && realPrice.data.data.length > 0) {
+        realPriceData = realPrice.data.data[0]; // 최신 거래
         priceType = "최근 실거래가";
       }
     } catch (error) {
       console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
     }
 
-    // 3단계: 상세 분석
+    // 4단계: 상세 분석
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `당신은 한국 부동산 전문 AI 분석가입니다. 이 건물 사진을 분석하여 건물의 스펙과 시세 정보를 추정해주세요.
 
@@ -176,9 +199,13 @@ ${realPriceData ? `
       building_name: basicInfo.building_name,
       address: basicInfo.address,
       district: basicInfo.district,
+      building_type: basicInfo.building_type,
       price_type: priceType,
+      latitude: locationData?.latitude || result.latitude,
+      longitude: locationData?.longitude || result.longitude,
       ...result,
-      real_price_data: realPriceData // 실거래가 원본 데이터 저장
+      real_price_data: realPriceData,
+      location_source: locationData?.source || 'AI 추정'
     };
     
     await base44.entities.BuildingAnalysis.create(savedData);
