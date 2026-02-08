@@ -151,10 +151,8 @@ Deno.serve(async (req) => {
       apiEndpoint = 'getRTMSDataSvcNrgTrade';
     }
 
-    // 최근 데이터 조회 (전월 데이터 - API는 당월 데이터가 완전하지 않을 수 있음)
-    const now = new Date();
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const dealYmd = lastMonth.getFullYear() + String(lastMonth.getMonth() + 1).padStart(2, '0');
+    // 최근 데이터 조회 (2025년 12월 데이터)
+    const dealYmd = '202512';
 
     const url = `https://apis.data.go.kr/1613000/${serviceName}/${apiEndpoint}`;
     const params = new URLSearchParams({
