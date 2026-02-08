@@ -42,42 +42,89 @@ export default function Home() {
     
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `당신은 한국 부동산 전문 AI 분석가입니다. 이 건물 사진을 분석하여 건물의 스펙과 시세 정보를 추정해주세요.
-
-**최우선 과제**: 정확한 실거래가 정보 확보
-1. 건물의 주소를 최대한 정확히 파악하세요 (도로명주소, 지번주소)
-2. 다음 소스에서 실거래가 정보를 검색하세요:
-   - 국토교통부 실거래가 공개시스템 (rt.molit.go.kr)
-   - 네이버 부동산, 다음 부동산의 실거래가 정보
-   - 해당 건물의 최근 거래 내역
-3. 실거래 정보를 찾았다면 price_type을 "최근 실거래가"로 설정
-4. 매물 호가 정보만 찾았다면 "신규 호가"로 설정
-5. 정보를 찾지 못했다면 주변 유사 건물 시세를 참고하여 "AI 추정가"로 설정
-
-분석 시 다음 사항을 고려해주세요:
-1. 건물의 외관, 구조, 재질, 디자인을 관찰하여 건물 유형과 건축연도를 추정
-2. 층수와 면적을 추정
-3. 한국의 2024-2025년 부동산 시세를 기반으로 매매가, 전세가, 월세를 추정
-4. 건물의 특징과 주변 환경을 분석
-5. 가능하다면 건물의 위치(위도/경도)를 추정 (한국 내 건물)
-6. 시세 동향과 투자 가치에 대한 간단한 분석
-7. 임대 수익률 분석 (월 임대수익, 연 수익률, 총 보증금, 예상 공실률)
-8. 용도지역 및 법적 정보 (용도지역, 건폐율, 용적률, 법적 제한사항, 개발계획)
-9. 투자 지표 점수 (종합, 입지, 수익성, 성장 가능성 각각 0-100점)
-
-정확하지 않더라도 최선의 추정을 해주세요. 가격은 "약 X억 Y천만원" 또는 "약 X천만원" 형식으로 표시해주세요.
-월세는 "보증금 X만원 / 월 Y만원" 형식으로 표시해주세요.
-수익률은 "X.X%" 형식으로, 점수는 0-100 사이의 숫자로 표시해주세요.`,
+    // 1단계: 기본 정보 추출
+    const basicInfo = await base44.integrations.Core.InvokeLLM({
+      prompt: `이 건물 사진을 분석하여 주소와 건물명을 추정해주세요.
+      
+정확한 주소와 건물명을 찾는 것이 최우선입니다:
+- 간판, 표지판, 건물 외관의 텍스트를 주의깊게 읽으세요
+- 주변 랜드마크나 특징을 파악하세요
+- 건축 스타일, 시대, 위치를 고려하세요`,
       file_urls: [file_url],
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
         properties: {
-          building_name: { type: "string", description: "건물명 또는 추정 건물명" },
-          price_type: { type: "string", enum: ["최근 실거래가", "신규 호가", "AI 추정가"], description: "가격 정보 유형 - 실거래 정보를 찾았다면 '최근 실거래가', 매물 호가를 찾았다면 '신규 호가', 추정이면 'AI 추정가'" },
-          address: { type: "string", description: "추정 주소" },
-          district: { type: "string", description: "구/동 정보" },
+          address: { type: "string", description: "추정 주소 (구까지 포함)" },
+          building_name: { type: "string", description: "건물명" },
+          district: { type: "string", description: "구/동" }
+        }
+      }
+    });
+
+    // 2단계: 실거래가 조회 (Backend Function)
+    let realPriceData = null;
+    let priceType = "AI 추정가";
+    
+    try {
+      const realPrice = await base44.functions.getRealEstatePrice({
+        address: basicInfo.address,
+        buildingName: basicInfo.building_name
+      });
+      
+      if (realPrice.success && realPrice.data && realPrice.data.length > 0) {
+        realPriceData = realPrice.data[0]; // 최신 거래
+        priceType = "최근 실거래가";
+      }
+    } catch (error) {
+      console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
+    }
+
+    // 3단계: 상세 분석
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `당신은 한국 부동산 전문 AI 분석가입니다. 이 건물 사진을 분석하여 건물의 스펙과 시세 정보를 추정해주세요.
+
+${realPriceData ? `
+**실거래가 정보 (국토교통부 공식 데이터)**:
+- 건물명: ${realPriceData.건물명}
+- 거래금액: ${realPriceData.거래금액}
+- 거래일: ${realPriceData.거래일}
+- 건축연도: ${realPriceData.건축연도}
+- 층: ${realPriceData.층}
+- 전용면적: ${realPriceData.전용면적}㎡
+- 위치: ${realPriceData.법정동} ${realPriceData.지번}
+
+위 실거래가를 기준으로 현재 시세를 추정하세요.
+` : `
+**실거래가 정보를 찾지 못했습니다.**
+주변 유사 건물의 시세를 참고하여 추정하세요.
+`}
+
+기본 정보:
+- 주소: ${basicInfo.address}
+- 건물명: ${basicInfo.building_name}
+- 구/동: ${basicInfo.district}
+
+분석 시 다음 사항을 고려해주세요:
+1. ${realPriceData ? '실거래가를 기준으로 현재 시세를 산정' : '건물의 외관을 보고 추정'}
+2. 층수와 면적을 추정
+3. 한국의 2026년 부동산 시세를 기반으로 매매가, 전세가, 월세를 추정
+4. 건물의 특징과 주변 환경을 분석
+5. 가능하다면 건물의 위치(위도/경도)를 추정 (한국 내 건물)
+6. 시세 동향과 투자 가치에 대한 간단한 분석
+7. 임대 수익률 분석
+8. 용도지역 및 법적 정보
+9. 투자 지표 점수 (0-100점)
+
+가격은 "약 X억 Y천만원" 형식으로 표시해주세요.`,
+      file_urls: [file_url],
+      add_context_from_internet: true,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          building_name: { type: "string", description: "건물명" },
+          address: { type: "string", description: "주소" },
+          district: { type: "string", description: "구/동" },
           building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
           estimated_year: { type: "string", description: "추정 건축연도" },
           estimated_floors: { type: "number", description: "추정 층수" },
@@ -126,7 +173,12 @@ export default function Home() {
 
     const savedData = {
       image_url: file_url,
+      building_name: basicInfo.building_name,
+      address: basicInfo.address,
+      district: basicInfo.district,
+      price_type: priceType,
       ...result,
+      real_price_data: realPriceData // 실거래가 원본 데이터 저장
     };
     
     await base44.entities.BuildingAnalysis.create(savedData);
