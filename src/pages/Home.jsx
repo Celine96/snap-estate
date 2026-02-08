@@ -51,35 +51,54 @@ export default function Home() {
       console.log('위치 추출 실패:', error);
     }
     
-    // 2단계: 기본 정보 추출
+    // 2단계: 기본 정보 추출 (정확도 개선)
     const basicInfo = await base44.integrations.Core.InvokeLLM({
-      prompt: `이 건물 사진을 분석하여 주소, 건물명, 건물 유형을 추정해주세요.
+      prompt: `당신은 한국 부동산 전문가입니다. 이 건물 사진을 매우 정확하게 분석하세요.
 
 ${locationData ? `
-참고: GPS 좌표가 감지되었습니다.
+🎯 GPS 좌표 감지됨:
 - 위도: ${locationData.latitude}
 - 경도: ${locationData.longitude}
 - 신뢰도: ${locationData.confidence}
-이 좌표 주변의 건물을 검색하세요.
+
+이 좌표를 네이버 지도/카카오맵에서 검색하여 정확한 건물을 찾으세요.
 ` : ''}
 
-정확한 정보를 찾기 위해:
-- 간판, 표지판, 건물 외관의 텍스트를 주의깊게 읽으세요
-- 주변 랜드마크나 특징을 파악하세요
-- 네이버/카카오 지도에서 해당 위치의 건물을 검색하세요`,
+📋 분석 단계별 체크리스트:
+1. **간판/표지판 텍스트 읽기** (가장 중요!)
+   - 건물명, 상호명을 정확히 읽으세요
+   - 숫자, 영문, 한글 모두 정확히
+   
+2. **주변 랜드마크 확인**
+   - 지하철역, 버스정류장 이름
+   - 주변 유명 건물, 프랜차이즈
+   - 도로명 표지판
+   
+3. **건물 특징 분석**
+   - 건축 스타일 (현대식/구형)
+   - 층수, 외관 재질
+   - 상가/주거 혼합 여부
+   
+4. **인터넷 검색 활용**
+   - 네이버 지도에서 주변 검색
+   - 건물명으로 정확히 매칭
+   - 도로명 주소 확인
+
+⚠️ 중요: 추측하지 말고 보이는 정보만 사용하세요!`,
       file_urls: [file_url],
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
         properties: {
-          address: { type: "string", description: "정확한 주소 (시/구/동까지)" },
-          building_name: { type: "string", description: "정확한 건물명" },
-          district: { type: "string", description: "구/동" },
+          address: { type: "string", description: "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
+          building_name: { type: "string", description: "정확한 건물명 (간판 그대로)" },
+          district: { type: "string", description: "구/동 (예: 강남구, 역삼동)" },
           building_type: { 
             type: "string", 
             enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
             description: "건물 유형" 
-          }
+          },
+          confidence_notes: { type: "string", description: "판단 근거 (어떤 정보로 확인했는지)" }
         }
       }
     });
@@ -103,43 +122,62 @@ ${locationData ? `
       console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
     }
 
-    // 4단계: 상세 분석
+    // 4단계: 상세 분석 (통합 정확도 개선)
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `당신은 한국 부동산 전문 AI 분석가입니다. 이 건물 사진을 분석하여 건물의 스펙과 시세 정보를 추정해주세요.
+      prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다. 
+이 건물을 매우 정확하게 분석하여 실제 시세에 가깝게 평가하세요.
 
-${realPriceData ? `
-**실거래가 정보 (국토교통부 공식 데이터)**:
-- 건물명: ${realPriceData.건물명}
-- 거래금액: ${realPriceData.거래금액}
-- 거래일: ${realPriceData.거래일}
-- 건축연도: ${realPriceData.건축연도}
-- 층: ${realPriceData.층}
-- 전용면적: ${realPriceData.전용면적}㎡
-- 위치: ${realPriceData.법정동} ${realPriceData.지번}
-
-위 실거래가를 기준으로 현재 시세를 추정하세요.
-` : `
-**실거래가 정보를 찾지 못했습니다.**
-주변 유사 건물의 시세를 참고하여 추정하세요.
-`}
-
-기본 정보:
+📍 **확인된 건물 정보:**
 - 주소: ${basicInfo.address}
 - 건물명: ${basicInfo.building_name}
-- 구/동: ${basicInfo.district}
+- 건물 유형: ${basicInfo.building_type}
+- 지역: ${basicInfo.district}
+${basicInfo.confidence_notes ? `- 판단 근거: ${basicInfo.confidence_notes}` : ''}
 
-분석 시 다음 사항을 고려해주세요:
-1. ${realPriceData ? '실거래가를 기준으로 현재 시세를 산정' : '건물의 외관을 보고 추정'}
-2. 층수와 면적을 추정
-3. 한국의 2026년 부동산 시세를 기반으로 매매가, 전세가, 월세를 추정
-4. 건물의 특징과 주변 환경을 분석
-5. 가능하다면 건물의 위치(위도/경도)를 추정 (한국 내 건물)
-6. 시세 동향과 투자 가치에 대한 간단한 분석
-7. 임대 수익률 분석
-8. 용도지역 및 법적 정보
-9. 투자 지표 점수 (0-100점)
+${realPriceData ? `
+💰 **국토교통부 실거래가 (공식 데이터):**
+- 건물: ${realPriceData.건물명}
+- 거래금액: ${realPriceData.거래금액} 만원
+- 거래일: ${realPriceData.거래일}
+- 건축년도: ${realPriceData.건축연도}년
+- 층: ${realPriceData.층}층
+- 전용면적: ${realPriceData.전용면적}㎡ (약 ${Math.round(realPriceData.전용면적 * 0.3025)}평)
+- 위치: ${realPriceData.법정동} ${realPriceData.지번}
 
-가격은 "약 X억 Y천만원" 형식으로 표시해주세요.`,
+✅ 이 실거래가를 기준으로 정확하게 산정하세요:
+- 매매가: 실거래가 ±5% 범위
+- 전세가: 매매가의 60-70%
+- 월세: 전세가 대비 연 5-7% 수익률 기준
+` : `
+⚠️ 실거래가 데이터 없음 - 주변 시세 기반으로 신중하게 추정하세요.
+`}
+
+🔍 **정확한 분석 요구사항:**
+
+1. **건물 스펙 분석** (사진 기반):
+   - 정확한 층수 (1층부터 세어 확인)
+   - 건축 연도 추정 (외관 상태, 건축 스타일)
+   - 대략적인 면적 (층당 면적 × 층수)
+
+2. **시세 산정** (2026년 1월 기준):
+   - 매매가: ${realPriceData ? '실거래가 기준' : '주변 시세 참고'}
+   - 전세가: 매매가의 60-70%
+   - 월세: 보증금/월세 (예: 5천만원/120만원)
+   
+3. **주변 환경** (사진에서 보이는 것만):
+   - 교통: 지하철역, 버스 정류장 거리
+   - 편의시설: 편의점, 은행, 음식점 등
+   - 상권: 주변 상가 밀집도
+
+4. **투자 가치 평가**:
+   - 입지 점수: 교통/편의성 (0-100)
+   - 수익성 점수: 임대 수익률 (0-100)
+   - 성장성 점수: 향후 발전 가능성 (0-100)
+
+⚠️ 주의사항:
+- 보이지 않는 정보는 "확인 불가"로 표시
+- 과장하지 말고 현실적으로 평가
+- 가격은 "약 X억 X천만원" 형식으로 명확하게`,
       file_urls: [file_url],
       add_context_from_internet: true,
       response_json_schema: {
