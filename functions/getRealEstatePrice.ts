@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 건물 유형에 따른 API 엔드포인트 선택
+    // 건물 유형에 따른 API 엔드포인트 선택 (공식 문서 기준)
     let apiEndpoint = '';
     let serviceName = '';
     
@@ -139,14 +139,15 @@ Deno.serve(async (req) => {
       serviceName = 'RTMSDataSvcOffiTrade';
       apiEndpoint = 'getRTMSDataSvcOffiTrade';
     } else if (buildingType === '상가' || buildingType === '오피스') {
-      serviceName = 'RTMSOBJSvc';
+      // 공식 문서: 상업업무용 부동산 매매 실거래가
+      serviceName = 'RTMSDataSvcNrgTrade';
       apiEndpoint = 'getRTMSDataSvcNrgTrade';
     } else if (buildingType === '빌라/다세대' || buildingType === '단독주택') {
       serviceName = 'RTMSDataSvcRHTrade';
       apiEndpoint = 'getRTMSDataSvcRHTrade';
     } else {
       // 기본값: 상업용
-      serviceName = 'RTMSOBJSvc';
+      serviceName = 'RTMSDataSvcNrgTrade';
       apiEndpoint = 'getRTMSDataSvcNrgTrade';
     }
 
