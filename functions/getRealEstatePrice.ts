@@ -229,14 +229,8 @@ Deno.serve(async (req) => {
         };
       }
 
-      // 건물명으로 필터링
-      if (buildingName && buildingName.length > 1) {
-        const name = itemData.건물명 || '';
-        // 부분 일치 검색 (더 관대하게)
-        if (name.includes(buildingName) || buildingName.includes(name)) {
-          items.push(itemData);
-        }
-      } else {
+      // 데이터가 유효한 경우에만 추가
+      if (itemData.거래금액) {
         items.push(itemData);
       }
     }
