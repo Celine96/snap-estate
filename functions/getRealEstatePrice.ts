@@ -90,9 +90,9 @@ Deno.serve(async (req) => {
     const now = new Date();
     const dealYmd = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0');
 
-    const url = `http://openapi.molit.go.kr:8081/OpenAPI_ToolInstallPackage/service/rest/${serviceName}/${apiEndpoint}`;
+    const url = `https://apis.data.go.kr/1613000/${serviceName}/${apiEndpoint}`;
     const params = new URLSearchParams({
-      serviceKey: apiKey,
+      serviceKey: decodeURIComponent(apiKey),
       LAWD_CD: sigunguCode,
       DEAL_YMD: dealYmd,
       numOfRows: '100'
