@@ -246,8 +246,8 @@ ${realPriceData ? `
       location_source: locationData?.source || 'AI 추정'
     };
     
-    await base44.entities.BuildingAnalysis.create(savedData);
-    setAnalysisData(savedData);
+    const createdData = await base44.entities.BuildingAnalysis.create(savedData);
+    setAnalysisData(createdData);
     setShowResult(true);
     setIsAnalyzing(false);
     refetch();
@@ -265,6 +265,7 @@ ${realPriceData ? `
   };
 
   const handleLocationAccuracy = async (accuracy) => {
+    if (!analysisData?.id) return;
     const updatedData = { ...analysisData, location_accuracy: accuracy };
     await base44.entities.BuildingAnalysis.update(analysisData.id, updatedData);
     setAnalysisData(updatedData);
