@@ -242,11 +242,24 @@ Deno.serve(async (req) => {
       return dateB - dateA;
     });
 
+    // 건물명으로 필터링 (검색어가 있을 경우)
+    let filteredItems = items;
+    if (buildingName && buildingName.length > 1) {
+      filteredItems = items.filter(item => {
+        const name = item.건물명 || '';
+        return name.includes(buildingName) || buildingName.includes(name);
+      });
+      
+      console.log(`건물명 필터 결과: ${items.length}건 → ${filteredItems.length}건 (검색어: ${buildingName})`);
+    }
+
     return Response.json({
       success: true,
-      message: `${items.length}건의 실거래가 데이터를 찾았습니다.`,
+      message: `${filteredItems.length}건의 실거래가 데이터를 찾았습니다.`,
       buildingType: buildingType,
-      data: items.slice(0, 10)
+      totalCount: items.length,
+      filteredCount: filteredItems.length,
+      data: filteredItems.slice(0, 10)
     });
 
   } catch (error) {
