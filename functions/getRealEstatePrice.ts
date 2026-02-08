@@ -186,49 +186,54 @@ Deno.serve(async (req) => {
       const itemXml = match[1];
       
       const getTagValue = (tag) => {
-        const regex = new RegExp(`<${tag}><!\\[CDATA\\[([^\\]]+)\\]\\]><\/${tag}>|<${tag}>([^<]+)<\/${tag}>`);
+        const regex = new RegExp(`<${tag}><!\\[CDATA\\[([^\\]]+)\\]\\]><\/${tag}>|<${tag}>([^<]*)<\/${tag}>`);
         const match = itemXml.match(regex);
         return match ? (match[1] || match[2] || '').trim() : '';
       };
 
-      // 건물 유형에 따라 다른 필드 사용
+      // 건물 유형에 따라 다른 필드 사용 (공식 문서 기준)
       let itemData = {};
       
       if (buildingType === '아파트') {
+        // 아파트: aptNm (아파트명)
         itemData = {
           건물명: getTagValue('aptNm') || getTagValue('아파트'),
           거래금액: getTagValue('dealAmount') || getTagValue('거래금액'),
           건축연도: getTagValue('buildYear') || getTagValue('건축년도'),
           층: getTagValue('floor') || getTagValue('층'),
-          전용면적: getTagValue('excluUseArea') || getTagValue('전용면적'),
+          전용면적: getTagValue('excluUseAr') || getTagValue('excluUseArea') || getTagValue('전용면적'),
           거래일: `${getTagValue('dealYear') || getTagValue('년')}-${getTagValue('dealMonth') || getTagValue('월')}-${getTagValue('dealDay') || getTagValue('일')}`,
           법정동: getTagValue('umdNm') || getTagValue('법정동'),
           지번: getTagValue('jibun') || getTagValue('지번'),
           용도: '아파트'
         };
       } else if (buildingType === '오피스텔') {
+        // 오피스텔: 단지 또는 offiNm
         itemData = {
           건물명: getTagValue('offiNm') || getTagValue('단지'),
           거래금액: getTagValue('dealAmount') || getTagValue('거래금액'),
           건축연도: getTagValue('buildYear') || getTagValue('건축년도'),
           층: getTagValue('floor') || getTagValue('층'),
-          전용면적: getTagValue('excluUseArea') || getTagValue('전용면적'),
+          전용면적: getTagValue('excluUseAr') || getTagValue('excluUseArea') || getTagValue('전용면적'),
           거래일: `${getTagValue('dealYear') || getTagValue('년')}-${getTagValue('dealMonth') || getTagValue('월')}-${getTagValue('dealDay') || getTagValue('일')}`,
           법정동: getTagValue('umdNm') || getTagValue('법정동'),
           지번: getTagValue('jibun') || getTagValue('지번'),
           용도: '오피스텔'
         };
       } else {
+        // 상업용: 공식 문서 응답 필드명 사용 (buildingUse, buildingAr 등)
         itemData = {
-          건물명: getTagValue('bldNm'),
+          건물명: '', // 상업용은 건물명 없음
           거래금액: getTagValue('dealAmount'),
           건축연도: getTagValue('buildYear'),
           층: getTagValue('floor'),
-          전용면적: getTagValue('excluUseArea'),
+          전용면적: getTagValue('buildingAr'), // 상업용은 buildingAr 사용
           거래일: `${getTagValue('dealYear')}-${getTagValue('dealMonth')}-${getTagValue('dealDay')}`,
           법정동: getTagValue('umdNm'),
           지번: getTagValue('jibun'),
-          용도: getTagValue('bldUse') || buildingType
+          건물유형: getTagValue('buildingType'),
+          건물주용도: getTagValue('buildingUse'),
+          용도: getTagValue('buildingUse') || buildingType
         };
       }
 
