@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { address, buildingName, buildingType } = await req.json();
     
-    const apiKey = Deno.env.get('MOLIT_API_KEY');
+    const apiKey = Deno.env.get('Decoding_Api_Key');
     
     if (!apiKey) {
       return Response.json({ 
