@@ -103,15 +103,26 @@ export default function AnalysisResult({ data, onUpdate }) {
 
       {/* Price Section */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-white/60 text-sm font-medium flex items-center gap-2">
-            <Banknote className="w-4 h-4" />
-            시세 정보
-          </h3>
-          {data.price_type && (
-            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/20 border text-xs">
-              {data.price_type}
-            </Badge>
+        <div className="flex flex-col gap-2 mb-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-white/60 text-sm font-medium flex items-center gap-2">
+              <Banknote className="w-4 h-4" />
+              시세 정보
+            </h3>
+            {data.price_type && (
+              <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/20 border text-xs">
+                {data.price_type}
+              </Badge>
+            )}
+          </div>
+          {data.real_price_data?.거래일 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/10">
+              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-white/70 text-xs">
+                거래일: <span className="text-emerald-400 font-medium">{data.real_price_data.거래일}</span>
+              </span>
+              <span className="text-white/40 text-xs ml-auto">국토교통부 실거래가</span>
+            </div>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
