@@ -153,8 +153,8 @@ Deno.serve(async (req) => {
       apiEndpoint = 'getRTMSDataSvcNrgTrade';
     }
 
-    // 최근 데이터 조회 (2026년 1월 데이터)
-    const dealYmd = '202601';
+    // 최근 데이터 조회 (2025년 12월 데이터)
+    const dealYmd = '202512';
 
     const url = `https://apis.data.go.kr/1613000/${serviceName}/${apiEndpoint}`;
     const params = new URLSearchParams({
