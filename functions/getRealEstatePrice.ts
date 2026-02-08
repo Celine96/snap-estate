@@ -156,10 +156,11 @@ Deno.serve(async (req) => {
 
     const url = `https://apis.data.go.kr/1613000/${serviceName}/${apiEndpoint}`;
     const params = new URLSearchParams({
-      serviceKey: decodeURIComponent(apiKey),
+      serviceKey: apiKey,
       LAWD_CD: sigunguCode,
       DEAL_YMD: dealYmd,
-      numOfRows: '100'
+      numOfRows: '100',
+      pageNo: '1'
     });
 
     console.log('API 호출:', {
