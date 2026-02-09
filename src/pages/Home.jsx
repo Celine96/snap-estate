@@ -825,7 +825,13 @@ ${realPriceData ? `
                           <span className="text-xs font-medium">정확</span>
                         </button>
                       </div>
-                    </div>
+                    )}
+                    {analysisData?.location_accuracy === null && !isAnalyzing && (
+                      <p className="text-white/40 text-xs text-center">
+                        💡 부정확 선택 시 자동으로 재분석합니다
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
