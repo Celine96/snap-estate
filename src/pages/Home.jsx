@@ -384,7 +384,7 @@ ${realPriceData ? `
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
-              빌딩 스캐너
+              SnapEstate
             </h1>
             <p className="text-white/40 text-sm sm:text-base max-w-md mx-auto">
               건물 사진 한 장으로 스펙과 시세를 AI가 분석합니다
