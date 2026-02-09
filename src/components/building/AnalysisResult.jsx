@@ -116,12 +116,16 @@ export default function AnalysisResult({ data, onUpdate }) {
             )}
           </div>
           {data.real_price_data?.거래일 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/10">
-              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-white/70 text-xs">
-                거래일: <span className="text-emerald-400 font-medium">{data.real_price_data.거래일}</span>
-              </span>
-              <span className="text-white/40 text-xs ml-auto">국토교통부 실거래가</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+              <Calendar className="w-4 h-4 text-emerald-400" />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-emerald-400 text-xs font-semibold">
+                  {data.real_price_data.거래일.split('-')[0]}년 실거래가 기준
+                </span>
+                <span className="text-white/50 text-[10px]">
+                  거래일: {data.real_price_data.거래일} (국토교통부)
+                </span>
+              </div>
             </div>
           )}
         </div>
