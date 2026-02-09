@@ -13,7 +13,6 @@ import ImageUploader from '../components/building/ImageUploader';
 import AnalysisResult from '../components/building/AnalysisResult';
 import MapView from '../components/building/MapView';
 import RecentAnalyses from '../components/building/RecentAnalyses';
-import RentalAnalysis from '../components/building/RentalAnalysis';
 import ZoningInfo from '../components/building/ZoningInfo';
 
 // Fix leaflet marker icon
@@ -273,15 +272,6 @@ ${realPriceData ? `
           longitude: { type: "number", description: "추정 경도" },
           confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
           analysis_summary: { type: "string", description: "종합 분석 요약 (3~4문장)" },
-          rental_income: {
-            type: "object",
-            properties: {
-              monthly_income: { type: "string", description: "월 임대수익 (예: 약 450만원)" },
-              annual_yield: { type: "string", description: "연 수익률 (예: 4.8%)" },
-              total_deposit: { type: "string", description: "총 보증금 (예: 약 3억원)" },
-              occupancy_rate: { type: "string", description: "예상 공실률 (예: 5%)" }
-            }
-          },
           zoning_info: {
             type: "object",
             properties: {
@@ -496,15 +486,6 @@ ${realPriceData ? `
               longitude: { type: "number" },
               confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
               analysis_summary: { type: "string" },
-              rental_income: {
-                type: "object",
-                properties: {
-                  monthly_income: { type: "string" },
-                  annual_yield: { type: "string" },
-                  total_deposit: { type: "string" },
-                  occupancy_rate: { type: "string" }
-                }
-              },
               zoning_info: {
                 type: "object",
                 properties: {
@@ -822,10 +803,6 @@ ${realPriceData ? `
               {activeTab === 'property' && (
                 <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
                   <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
-                  
-                  {analysisData?.rental_income && (
-                    <RentalAnalysis data={analysisData.rental_income} />
-                  )}
                   
                   {analysisData?.zoning_info && (
                     <ZoningInfo data={analysisData.zoning_info} />
