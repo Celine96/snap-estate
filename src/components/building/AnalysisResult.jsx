@@ -25,7 +25,7 @@ const InfoCard = ({ icon: Icon, label, value, delay = 0 }) => (
   </motion.div>
 );
 
-const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit }) => (
+const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit, dateInfo }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -46,6 +46,9 @@ const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit }) => (
       />
     ) : (
       <p className="text-white font-semibold text-sm leading-relaxed whitespace-pre-line">{value || '정보 없음'}</p>
+    )}
+    {dateInfo && (
+      <p className="text-white/40 text-xs mt-1">{dateInfo}</p>
     )}
   </motion.div>
 );
@@ -137,6 +140,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             color="bg-slate-700/50 text-slate-300"
             delay={0.1}
             onEdit={(v) => handleFieldUpdate('estimated_price_sale', v)}
+            dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
           />
           <PriceCard
             label="전세가"
@@ -145,6 +149,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             color="bg-slate-700/50 text-slate-300"
             delay={0.15}
             onEdit={(v) => handleFieldUpdate('estimated_price_rent', v)}
+            dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
           />
           <PriceCard
             label="월세"
@@ -153,6 +158,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             color="bg-slate-700/50 text-slate-300"
             delay={0.2}
             onEdit={(v) => handleFieldUpdate('estimated_price_monthly', v)}
+            dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
           />
         </div>
       </div>
