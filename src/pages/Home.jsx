@@ -32,9 +32,22 @@ export default function Home() {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('results');
 
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: recentAnalyses = [], refetch } = useQuery({
-    queryKey: ['building-analyses'],
-    queryFn: () => base44.entities.BuildingAnalysis.list('-created_date', 8),
+    queryKey: ['building-analyses', user?.email],
+    queryFn: async () => {
+      if (!user) return [];
+      return base44.entities.BuildingAnalysis.filter(
+        { created_by: user.email }, 
+        '-created_date', 
+        8
+      );
+    },
+    enabled: !!user,
   });
 
   const handleImageSelected = async (file) => {
