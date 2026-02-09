@@ -784,6 +784,12 @@ ${realPriceData ? `
                   {/* Location Accuracy Evaluation */}
                   <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3">
                     <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
+                    {isAnalyzing ? (
+                      <div className="flex items-center justify-center gap-2 py-4">
+                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        <span className="text-white/60 text-sm">재분석 중...</span>
+                      </div>
+                    ) : (
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => handleLocationAccuracy('incorrect')}
