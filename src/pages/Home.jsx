@@ -860,32 +860,3 @@ ${realPriceData ? `
     </div>
   );
 }
-                  </div>
-                </div>
-              )}
-
-              {/* Property Info Tab Content */}
-              {activeTab === 'property' && (
-                <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
-                  <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
-                  
-                  {analysisData?.rental_income && (
-                    <RentalAnalysis data={analysisData.rental_income} />
-                  )}
-                  
-                  {analysisData?.zoning_info && (
-                    <ZoningInfo data={analysisData.zoning_info} />
-                  )}
-                  
-                  {analysisData?.investment_score && (
-                    <InvestmentScore data={analysisData.investment_score} />
-                  )}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
