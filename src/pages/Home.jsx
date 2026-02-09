@@ -348,6 +348,13 @@ ${realPriceData ? `
     
     // "부정확" 선택 시 재분석 시작
     if (accuracy === 'incorrect') {
+      // 1단계: 신뢰도를 먼저 "낮음"으로 변경
+      const updatedConfidence = { ...analysisData, confidence: '낮음', location_accuracy: accuracy };
+      await base44.entities.BuildingAnalysis.update(analysisData.id, updatedConfidence);
+      setAnalysisData(updatedConfidence);
+      refetch();
+      
+      // 2단계: 재분석 시작
       setIsAnalyzing(true);
       
       try {
