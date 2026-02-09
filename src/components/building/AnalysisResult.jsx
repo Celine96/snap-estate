@@ -132,7 +132,7 @@ export default function AnalysisResult({ data, onUpdate }) {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className={`grid gap-3 ${data.building_type === '상가' || data.building_type === '오피스' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
           <PriceCard
             label="매매가"
             value={data.estimated_price_sale}
@@ -142,17 +142,19 @@ export default function AnalysisResult({ data, onUpdate }) {
             onEdit={(v) => handleFieldUpdate('estimated_price_sale', v)}
             dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
           />
+          {data.building_type !== '상가' && data.building_type !== '오피스' && (
+            <PriceCard
+              label="전세가"
+              value={data.estimated_price_rent}
+              icon={TrendingUp}
+              color="bg-slate-700/50 text-slate-300"
+              delay={0.15}
+              onEdit={(v) => handleFieldUpdate('estimated_price_rent', v)}
+              dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
+            />
+          )}
           <PriceCard
-            label="전세가"
-            value={data.estimated_price_rent}
-            icon={TrendingUp}
-            color="bg-slate-700/50 text-slate-300"
-            delay={0.15}
-            onEdit={(v) => handleFieldUpdate('estimated_price_rent', v)}
-            dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
-          />
-          <PriceCard
-            label="월세"
+            label={data.building_type === '상가' || data.building_type === '오피스' ? '임차 보증금/월세' : '월세'}
             value={data.estimated_price_monthly}
             icon={Banknote}
             color="bg-slate-700/50 text-slate-300"

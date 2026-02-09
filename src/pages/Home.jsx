@@ -238,7 +238,7 @@ ${realPriceData ? `
 
 2. **시세 산정** (2026년 1월 기준):
    - 매매가: ${realPriceData ? '실거래가 기준' : '주변 시세 참고'}
-   - 전세가: 매매가의 60-70%
+   - 전세가: 매매가의 60-70% (주거용 건물만 해당, 상가/오피스는 제외)
    - 월세: 보증금/월세 (예: 5천만원/120만원)
    
 3. **주변 환경** (사진에서 보이는 것만):
@@ -268,8 +268,8 @@ ${realPriceData ? `
           estimated_floors: { type: "number", description: "추정 층수" },
           estimated_area_pyeong: { type: "string", description: "추정 면적(평)" },
           estimated_price_sale: { type: "string", description: "추정 매매가" },
-          estimated_price_rent: { type: "string", description: "추정 전세가" },
-          estimated_price_monthly: { type: "string", description: "추정 월세 (보증금/월세)" },
+          estimated_price_rent: { type: "string", description: "추정 전세가 (주거용 건물만, 상가/오피스는 null)" },
+          estimated_price_monthly: { type: "string", description: "추정 월세/임차료 (보증금/월세)" },
           price_trend: { type: "string", description: "시세 동향 설명" },
           building_features: { type: "array", items: { type: "string" }, description: "건물 특징들" },
           nearby_facilities: { type: "array", items: { type: "string" }, description: "주변 시설 추정" },
