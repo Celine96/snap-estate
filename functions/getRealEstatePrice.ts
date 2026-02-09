@@ -153,10 +153,21 @@ Deno.serve(async (req) => {
       apiEndpoint = 'getRTMSDataSvcNrgTrade';
     }
 
-    // 최근 3년 데이터 조회 (2023년 1월 ~ 2025년 12월)
-    const startYear = 2023;
-    const endYear = 2025;
-    const endMonth = 12;
+    // 건물 유형별 API 제공 시작 연도
+    const apiStartYears = {
+      '아파트': 2006,
+      '오피스텔': 2007,
+      '빌라/다세대': 2007,
+      '단독주택': 2007,
+      '상가': 2010,
+      '오피스': 2010
+    };
+    
+    // 최대한 많은 데이터 조회 (API 제공 시작년도 ~ 현재)
+    const startYear = apiStartYears[buildingType] || 2006;
+    const currentDate = new Date();
+    const endYear = currentDate.getFullYear();
+    const endMonth = currentDate.getMonth() + 1; // 0-based index
     
     const url = `https://apis.data.go.kr/1613000/${serviceName}/${apiEndpoint}`;
     const items = [];
