@@ -15,7 +15,6 @@ import MapView from '../components/building/MapView';
 import RecentAnalyses from '../components/building/RecentAnalyses';
 import RentalAnalysis from '../components/building/RentalAnalysis';
 import ZoningInfo from '../components/building/ZoningInfo';
-import InvestmentScore from '../components/building/InvestmentScore';
 
 // Fix leaflet marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -248,11 +247,6 @@ ${realPriceData ? `
    - 편의시설: 편의점, 은행, 음식점 등
    - 상권: 주변 상가 밀집도
 
-4. **투자 가치 평가**:
-   - 입지 점수: 교통/편의성 (0-100)
-   - 수익성 점수: 임대 수익률 (0-100)
-   - 성장성 점수: 향후 발전 가능성 (0-100)
-
 ⚠️ 주의사항:
 - 보이지 않는 정보는 "확인 불가"로 표시
 - 과장하지 말고 현실적으로 평가
@@ -296,15 +290,6 @@ ${realPriceData ? `
               floor_area_ratio: { type: "string", description: "용적률 (예: 200%)" },
               legal_restrictions: { type: "array", items: { type: "string" }, description: "법적 제한사항 리스트" },
               development_plan: { type: "string", description: "개발계획 정보" }
-            }
-          },
-          investment_score: {
-            type: "object",
-            properties: {
-              overall: { type: "number", description: "종합 투자점수 (0-100)" },
-              location: { type: "number", description: "입지 점수 (0-100)" },
-              profitability: { type: "number", description: "수익성 점수 (0-100)" },
-              growth_potential: { type: "number", description: "성장 가능성 점수 (0-100)" }
             }
           }
         }
@@ -528,15 +513,6 @@ ${realPriceData ? `
                   floor_area_ratio: { type: "string" },
                   legal_restrictions: { type: "array", items: { type: "string" } },
                   development_plan: { type: "string" }
-                }
-              },
-              investment_score: {
-                type: "object",
-                properties: {
-                  overall: { type: "number" },
-                  location: { type: "number" },
-                  profitability: { type: "number" },
-                  growth_potential: { type: "number" }
                 }
               }
             }
@@ -853,10 +829,6 @@ ${realPriceData ? `
                   
                   {analysisData?.zoning_info && (
                     <ZoningInfo data={analysisData.zoning_info} />
-                  )}
-                  
-                  {analysisData?.investment_score && (
-                    <InvestmentScore data={analysisData.investment_score} />
                   )}
                 </div>
               )}
