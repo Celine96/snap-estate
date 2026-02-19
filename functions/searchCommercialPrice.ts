@@ -162,17 +162,17 @@ Deno.serve(async (req) => {
       // ③ 동 매칭
       if (dong && (row.시군구 || '').includes(dong)) score += 30;
 
-      // ③ 매칭단계 보너스
+      // ④ 매칭단계 보너스
       if (row.매칭단계 && row.매칭단계 !== '매칭실패') score += 20;
 
-      // ④ 건축연도 유사도
+      // ⑤ 건축연도 유사도
       const year = row.건축년도 ? parseInt(row.건축년도) : null;
       if (estimatedYearNum && year) {
         const diff = Math.abs(estimatedYearNum - year);
         score += Math.max(0, 15 - diff * 1.5);
       }
 
-      // ⑤ 면적 유사도
+      // ⑥ 면적 유사도
       const area = row.전용연면적 ? parseFloat(row.전용연면적)
                   : row.대지면적 ? parseFloat(row.대지면적) : null;
       if (estimatedAreaSqm && area && area > 0) {
