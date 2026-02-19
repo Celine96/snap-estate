@@ -151,11 +151,11 @@ export default function AnalysisResult({ data, onUpdate }) {
         <div className={`grid gap-3 ${data.building_type === '상가' || data.building_type === '오피스' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
           <PriceCard
             label="매매가"
-            value={data.estimated_price_sale}
+            value={realPriceSale || data.estimated_price_sale}
             icon={Home}
             color="bg-slate-700/50 text-slate-300"
             delay={0.1}
-            onEdit={(v) => handleFieldUpdate('estimated_price_sale', v)}
+            onEdit={!realPriceSale ? (v) => handleFieldUpdate('estimated_price_sale', v) : undefined}
             dateInfo={data.real_price_data?.거래일 ? `${data.real_price_data.거래일} 기준` : data.price_type === 'AI 추정가' ? '2026년 2월 추정' : null}
           />
           {data.building_type !== '상가' && data.building_type !== '오피스' && (
