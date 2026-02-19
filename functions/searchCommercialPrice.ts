@@ -53,12 +53,15 @@ function jibunExactMatches(inputJibun, recordJibun) {
   return inputJibun === recordJibun;
 }
 
-// 레코드에서 지번 후보들 추출
+// 레코드에서 지번 후보들 추출 ("번지" 제거 후 순수 번호 추출)
 function getJibunCandidates(row) {
   const candidates = [];
   const sources = [row.지번, row.대지위치_표제부, row.도로명대지위치_표제부];
   for (const s of sources) {
-    const j = extractJibun(s || '');
+    if (!s) continue;
+    // 먼저 "번지" 제거 후 순수 지번 추출 시도
+    const normalized = normalizeBunji(s);
+    const j = extractJibun(normalized) || extractJibun(s);
     if (j) candidates.push(j);
   }
   return candidates;
