@@ -29,9 +29,14 @@ function jibunMatches(a, b) {
 function jibunExactMatches(a, b) {
   return !!a && !!b && a === b;
 }
+function normalizeBunji(str) {
+  if (!str) return str;
+  return str.replace(/번지\s*$/, '').trim();
+}
 function getJibunCandidates(row) {
   return [row.지번, row.대지위치_표제부, row.도로명대지위치_표제부]
-    .map(s => extractJibun(s || ''))
+    .filter(Boolean)
+    .map(s => extractJibun(normalizeBunji(s)) || extractJibun(s))
     .filter(Boolean);
 }
 
