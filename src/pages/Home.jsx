@@ -177,16 +177,15 @@ ${addressFromGPS ? `
     }
     
     try {
-      const realPrice = await base44.functions.getRealEstatePrice({
+      const realPrice = await base44.functions.searchCommercialPrice({
         address: searchAddress,
-        buildingName: basicInfo.building_name,
         buildingType: basicInfo.building_type,
         estimatedYear: quickEstimates?.year,
         estimatedArea: quickEstimates?.area_pyeong
       });
       
       if (realPrice.data?.success && realPrice.data.data && realPrice.data.data.length > 0) {
-        realPriceData = realPrice.data.data[0]; // 최신 거래
+        realPriceData = realPrice.data.data[0];
         priceType = "최근 실거래가";
       }
     } catch (error) {
