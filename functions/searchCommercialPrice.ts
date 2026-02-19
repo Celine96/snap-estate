@@ -22,7 +22,7 @@ function extractJibun(address) {
   if (!address) return null;
   if (isRoadAddress(address)) return null; // 도로명 주소는 지번 추출 안 함
 
-  // "번지" 앞 숫자
+  // "번지" 앞 숫자 (예: "논현동 16-39번지" → "16-39")
   const withBunji = address.match(/(\d+(?:-\d+)?)\s*번지/);
   if (withBunji) return withBunji[1];
 
@@ -31,6 +31,12 @@ function extractJibun(address) {
   if (trailing) return trailing[1];
 
   return null;
+}
+
+// "번지" 문자열 정규화 (레코드 지번 필드가 전체 주소 형태일 때 처리)
+function normalizeBunji(str) {
+  if (!str) return str;
+  return str.replace(/번지\s*$/, '').trim();
 }
 
 // 두 지번 문자열 본번 기준 매칭
