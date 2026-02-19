@@ -118,7 +118,7 @@ async function findRealPrice(base44, address, buildingType, estimatedYear, estim
   scored.sort((a, b) => b._score !== a._score ? b._score - a._score : (b.계약년월 || '').localeCompare(a.계약년월 || ''));
 
   const top = scored[0];
-  if (top._score < 80) return null;
+  if (top._score < 100) return null;
 
   const rawPrice = (top.거래금액 || '0').toString().replace(/,/g, '').replace(/[^0-9]/g, '');
   const yyyymm = top.계약년월 || '';
