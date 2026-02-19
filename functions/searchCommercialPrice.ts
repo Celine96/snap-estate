@@ -143,7 +143,14 @@ Deno.serve(async (req) => {
     const scored = records.map(row => {
       let score = 0;
 
-      // ① 지번 매칭 (도로명 주소인 경우 스킵)
+      // ① 도로명 매칭 (도로명 주소인 경우)
+      if (roadAddress) {
+        const rowRoad = row.도로명 || row.도로명대지위치_표제부 || '';
+        if (rowRoad && address.includes(rowRoad.replace(/\s*\([^)]+\)/, '').trim())) score += 120;
+        else if (rowRoad && rowRoad.includes(address.replace(/서울특별시\s+/, '').replace(/강남구\s+/, ''))) score += 80;
+      }
+
+      // ② 지번 매칭 (도로명 주소인 경우 스킵)
       if (inputJibun) {
         const candidates = getJibunCandidates(row);
         for (const candidate of candidates) {
@@ -152,7 +159,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ② 동 매칭
+      // ③ 동 매칭
       if (dong && (row.시군구 || '').includes(dong)) score += 30;
 
       // ③ 매칭단계 보너스
