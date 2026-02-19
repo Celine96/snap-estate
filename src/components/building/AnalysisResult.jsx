@@ -123,10 +123,10 @@ export default function AnalysisResult({ data, onUpdate }) {
               <Calendar className="w-4 h-4 text-emerald-400" />
               <div className="flex flex-col gap-0.5">
                 <span className="text-emerald-400 text-xs font-semibold">
-                  {data.real_price_data.거래일.split('-')[0]}년 실거래가 기준
+                  {data.real_price_data.거래일.split('-')[0]}년 {data.real_price_data.거래일.split('-')[1]}월 실거래가 기준
                 </span>
                 <span className="text-white/50 text-[10px]">
-                  거래일: {data.real_price_data.거래일} (국토교통부)
+                  거래일: {data.real_price_data.거래일} · {data.real_price_data.건축물주용도 || ''} · {data.real_price_data.용도지역 || ''} (국토교통부)
                 </span>
               </div>
             </div>
