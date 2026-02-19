@@ -427,9 +427,8 @@ ${addressFromGPS ? `
         }
         
         try {
-          const realPrice = await base44.functions.getRealEstatePrice({
+          const realPrice = await base44.functions.searchCommercialPrice({
             address: searchAddress,
-            buildingName: basicInfo.building_name,
             buildingType: basicInfo.building_type,
             estimatedYear: quickEstimates?.year,
             estimatedArea: quickEstimates?.area_pyeong
