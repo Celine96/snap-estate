@@ -315,7 +315,7 @@ ${realPriceData ? `
     setAnalysisData(item);
     setShowResult(true);
 
-    // 실거래가 재조회 시도 (저장 당시 AI 추정가였던 경우 포함)
+    // 실거래가 재조회 시도 (신규 분석과 동일한 로직)
     try {
       const searchAddress = item.address || item.district;
       if (!searchAddress) return;
@@ -329,14 +329,10 @@ ${realPriceData ? `
 
       if (realPrice.data?.success && realPrice.data.data?.length > 0) {
         const realPriceData = realPrice.data.data[0];
-        // 매칭점수가 충분히 높을 때만 실거래가로 교체 (80점 이상 = 지번 본번 매칭 이상)
-        if (realPriceData.매칭점수 >= 80) {
-          const updated = { ...item, real_price_data: realPriceData, price_type: '최근 실거래가' };
-          setAnalysisData(updated);
-          // DB도 업데이트
-          await base44.entities.BuildingAnalysis.update(item.id, { real_price_data: realPriceData, price_type: '최근 실거래가' });
-          refetch();
-        }
+        const updated = { ...item, real_price_data: realPriceData, price_type: '최근 실거래가' };
+        setAnalysisData(updated);
+        await base44.entities.BuildingAnalysis.update(item.id, { real_price_data: realPriceData, price_type: '최근 실거래가' });
+        refetch();
       }
     } catch (e) {
       console.log('최근 기록 실거래가 재조회 실패:', e);
