@@ -77,37 +77,61 @@ Deno.serve(async (req) => {
 
     if (!district) return Response.json({ success: false, message: '지역구 식별 불가' });
 
-    // 동 포함 필터 → 없으면 구만
-    const filterTarget = dong ? `${district} ${dong}` : district;
-
+    // 도로명 주소인 경우 도로명 필드로 우선 검색
     let records = [];
-    try {
-      records = await base44.asServiceRole.entities.CommercialTransaction.filter(
-        { 시군구: { $regex: filterTarget } },
-        '-계약년월',
-        1000
-      );
-    } catch (_e) {
-      const all = await base44.asServiceRole.entities.CommercialTransaction.list('-계약년월', 15000);
-      records = (all || []).filter(r => (r.시군구 || '').includes(filterTarget));
+
+    if (roadAddress) {
+      // 도로명에서 핵심 도로명 추출 (예: "강남대로146길 7-3")
+      const roadMatch = address.match(/([가-힣0-9가-힣]+(?:로|길)\s*[\d-]+)/);
+      const roadKey = roadMatch?.[1]?.trim();
+      console.log(`[검색] 도로명 키: ${roadKey}`);
+
+      if (roadKey) {
+        try {
+          records = await base44.asServiceRole.entities.CommercialTransaction.filter(
+            { 도로명: { $regex: roadKey } },
+            '-계약년월',
+            200
+          );
+        } catch (_e) {
+          const all = await base44.asServiceRole.entities.CommercialTransaction.list('-계약년월', 15000);
+          records = (all || []).filter(r => (r.도로명 || '').includes(roadKey));
+        }
+        // 해제 거래 제외
+        records = records.filter(r => !r.해제사유발생일 || r.해제사유발생일 === '-');
+        console.log(`[검색] 도로명 매칭 ${records.length}건`);
+      }
     }
 
-    // 동 필터 결과 없으면 구 전체 재시도
-    if (records.length === 0 && dong) {
+    // 도로명 검색 결과 없거나 지번 주소인 경우 → 동/구 필터로 fallback
+    if (records.length === 0) {
+      const filterTarget = dong ? `${district} ${dong}` : district;
       try {
         records = await base44.asServiceRole.entities.CommercialTransaction.filter(
-          { 시군구: { $regex: district } },
+          { 시군구: { $regex: filterTarget } },
           '-계약년월',
           1000
         );
       } catch (_e) {
         const all = await base44.asServiceRole.entities.CommercialTransaction.list('-계약년월', 15000);
-        records = (all || []).filter(r => (r.시군구 || '').includes(district));
+        records = (all || []).filter(r => (r.시군구 || '').includes(filterTarget));
       }
-    }
 
-    // 해제 거래 제외
-    records = records.filter(r => !r.해제사유발생일 || r.해제사유발생일 === '-');
+      if (records.length === 0 && dong) {
+        try {
+          records = await base44.asServiceRole.entities.CommercialTransaction.filter(
+            { 시군구: { $regex: district } },
+            '-계약년월',
+            1000
+          );
+        } catch (_e) {
+          const all = await base44.asServiceRole.entities.CommercialTransaction.list('-계약년월', 15000);
+          records = (all || []).filter(r => (r.시군구 || '').includes(district));
+        }
+      }
+      // 해제 거래 제외
+      records = records.filter(r => !r.해제사유발생일 || r.해제사유발생일 === '-');
+    }
 
     console.log(`[검색] 후보 ${records.length}건`);
 
