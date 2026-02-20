@@ -347,12 +347,116 @@ ${realPriceData ? `
     refetch();
   };
 
+  const handleManualAddressSubmit = async () => {
+    if (!manualAddress.trim() || !analysisData?.id) return;
+    setShowManualInput(false);
+    setIsAnalyzing(true);
+
+    const file_url = analysisData.image_url;
+
+    // 수동 입력 주소로 실거래가 조회
+    let realPriceData = null;
+    let priceType = "AI 추정가";
+    try {
+      const realPrice = await base44.functions.searchCommercialPrice({
+        address: manualAddress.trim(),
+        buildingType: analysisData.building_type,
+        estimatedYear: analysisData.estimated_year,
+        estimatedArea: analysisData.estimated_area_pyeong ? parseFloat(analysisData.estimated_area_pyeong) : undefined
+      });
+      if (realPrice.data?.success && realPrice.data.data?.length > 0) {
+        realPriceData = realPrice.data.data[0];
+        priceType = "최근 실거래가";
+      }
+    } catch (e) {
+      console.log('실거래가 조회 실패:', e);
+    }
+
+    // 수동 주소로 상세 분석
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다.
+
+📍 사용자가 직접 입력한 정확한 주소: ${manualAddress.trim()}
+
+이 주소를 기준으로 건물을 분석하세요. 사진도 참고하세요.
+
+${realPriceData ? `💰 국토교통부 실거래가:
+- 거래금액: ${realPriceData.거래금액}만원
+- 거래일: ${realPriceData.거래일}
+⚠️ 매매가는 이미 확정됨. 전세가/월세만 추정하세요.` : '⚠️ 실거래가 없음 - 주변 시세 기반으로 추정하세요.'}
+
+정확한 건물 스펙, 시세, 주변 환경을 평가하세요.`,
+      file_urls: [file_url],
+      add_context_from_internet: true,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          building_name: { type: "string" },
+          address: { type: "string" },
+          district: { type: "string" },
+          building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
+          estimated_year: { type: "string" },
+          estimated_floors: { type: "number" },
+          estimated_area_pyeong: { type: "string" },
+          estimated_price_sale: { type: "string" },
+          estimated_price_rent: { type: "string" },
+          estimated_price_monthly: { type: "string" },
+          price_trend: { type: "string" },
+          building_features: { type: "array", items: { type: "string" } },
+          nearby_facilities: { type: "array", items: { type: "string" } },
+          latitude: { type: "number" },
+          longitude: { type: "number" },
+          confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
+          analysis_summary: { type: "string" },
+          zoning_info: {
+            type: "object",
+            properties: {
+              land_use_zone: { type: "string" },
+              building_to_land_ratio: { type: "string" },
+              floor_area_ratio: { type: "string" },
+              legal_restrictions: { type: "array", items: { type: "string" } },
+              development_plan: { type: "string" }
+            }
+          }
+        }
+      }
+    });
+
+    function convertManwon(manwon) {
+      const num = typeof manwon === 'string' ? parseInt(manwon.replace(/,/g, '')) : manwon;
+      if (isNaN(num)) return null;
+      if (num >= 10000) {
+        const eok = Math.floor(num / 10000);
+        const remain = num % 10000;
+        return remain > 0 ? `약 ${eok}억 ${remain.toLocaleString()}만원` : `약 ${eok}억원`;
+      }
+      return `약 ${num.toLocaleString()}만원`;
+    }
+    const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
+
+    const updatedData = {
+      ...analysisData,
+      ...result,
+      address: manualAddress.trim(),
+      price_type: priceType,
+      real_price_data: realPriceData || null,
+      ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
+      location_accuracy: null,
+    };
+
+    await base44.entities.BuildingAnalysis.update(analysisData.id, updatedData);
+    setAnalysisData(updatedData);
+    setManualAddress('');
+    refetch();
+    setIsAnalyzing(false);
+  };
+
   const handleLocationAccuracy = async (accuracy) => {
     if (!analysisData?.id) return;
     
-    // "부정확" 선택 시 재분석 시작
+    // "부정확" 선택 시 주소 직접 입력창 표시
     if (accuracy === 'incorrect') {
-      // 1단계: 신뢰도를 먼저 "낮음"으로 변경
+      setShowManualInput(true);
       const updatedConfidence = { ...analysisData, confidence: '낮음', location_accuracy: accuracy };
       await base44.entities.BuildingAnalysis.update(analysisData.id, updatedConfidence);
       setAnalysisData(updatedConfidence);
