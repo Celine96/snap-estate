@@ -462,8 +462,9 @@ ${realPriceData ? `💰 국토교통부 실거래가:
       setShowManualInput(true);
       refetch();
     } else {
-      // "근처" 또는 "정확" 선택 시 평가만 저장
-      const updatedData = { ...analysisData, location_accuracy: accuracy };
+      // "근처" 또는 "정확" 선택 시 평가 저장 + 정확이면 신뢰도 높음으로 변경
+      const confidenceUpdate = accuracy === 'accurate' ? { confidence: '높음' } : {};
+      const updatedData = { ...analysisData, location_accuracy: accuracy, ...confidenceUpdate };
       await base44.entities.BuildingAnalysis.update(analysisData.id, updatedData);
       setAnalysisData(updatedData);
       refetch();
