@@ -288,17 +288,19 @@ ${realPriceData ? `
 
     const savedData = {
       image_url: file_url,
+      ...result,
+      // 핵심 필드는 반드시 덮어씌워 AI 결과가 오염하지 못하도록 함
       building_name: basicInfo.building_name,
       address: addressFromGPS?.jibun_address || basicInfo.address,
       district: basicInfo.district,
       building_type: basicInfo.building_type,
+      // price_type은 반드시 실거래가 조회 결과로만 결정 (AI가 임의로 바꾸지 못하도록)
       price_type: priceType,
-      latitude: locationData?.latitude || result.latitude,
-      longitude: locationData?.longitude || result.longitude,
-      ...result,
+      real_price_data: realPriceData || null,
       // 실거래가가 있으면 매매가는 DB 값으로 덮어씀 (AI 추정값 무시)
       ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
-      real_price_data: realPriceData,
+      latitude: locationData?.latitude || result.latitude,
+      longitude: locationData?.longitude || result.longitude,
       location_source: locationData?.source || 'AI 추정'
     };
     
