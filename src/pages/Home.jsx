@@ -29,6 +29,8 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('results');
+  const [manualAddress, setManualAddress] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['user'],
