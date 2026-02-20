@@ -51,8 +51,8 @@ async function findRealPrice(base44, address, buildingType, estimatedYear, estim
   let records = [];
 
   if (roadAddress) {
-    const roadMatch = address.match(/([가-힣0-9가-힣]+(?:로|길)\s*[\d-]+)/);
-    const roadKey = roadMatch?.[1]?.trim();
+    const roadMatch = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
+    const roadKey = roadMatch ? `${roadMatch[1]} ${roadMatch[2]}`.trim() : null;
     if (roadKey) {
       try {
         records = await base44.asServiceRole.entities.CommercialTransaction.filter(
