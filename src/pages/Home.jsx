@@ -296,6 +296,8 @@ ${realPriceData ? `
       latitude: locationData?.latitude || result.latitude,
       longitude: locationData?.longitude || result.longitude,
       ...result,
+      // 실거래가가 있으면 매매가는 DB 값으로 덮어씀 (AI 추정값 무시)
+      ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
       real_price_data: realPriceData,
       location_source: locationData?.source || 'AI 추정'
     };
