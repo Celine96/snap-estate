@@ -90,9 +90,10 @@ Deno.serve(async (req) => {
     let records = [];
 
     if (roadAddress) {
-      // 도로명에서 핵심 도로명 추출 (예: "강남대로146길 7-3")
-      const roadMatch = address.match(/([가-힣0-9가-힣]+(?:로|길)\s*[\d-]+)/);
-      const roadKey = roadMatch?.[1]?.trim();
+      // 도로명에서 핵심 도로명 추출: "XX로(숫자)길" 또는 "XX로/길" + 번호
+      // 예: "논현로112길 3" → "논현로112길", "테헤란로 123" → "테헤란로 123"
+      const roadMatch = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
+      const roadKey = roadMatch ? `${roadMatch[1]} ${roadMatch[2]}`.trim() : null;
       console.log(`[검색] 도로명 키: ${roadKey}`);
 
       if (roadKey) {
