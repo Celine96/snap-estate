@@ -886,6 +886,34 @@ ${realPriceData ? `
                         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                         <span className="text-white/60 text-sm">재분석 중...</span>
                       </div>
+                    ) : showManualInput ? (
+                      <div className="space-y-2">
+                        <p className="text-white/50 text-xs">정확한 지번 또는 도로명 주소를 입력하세요</p>
+                        <input
+                          type="text"
+                          value={manualAddress}
+                          onChange={(e) => setManualAddress(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleManualAddressSubmit()}
+                          placeholder="예: 서울특별시 강남구 논현동 242-21"
+                          className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/40"
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleManualAddressSubmit}
+                            disabled={!manualAddress.trim()}
+                            className="flex-1 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-white/90 transition-all disabled:opacity-40"
+                          >
+                            이 주소로 분석
+                          </button>
+                          <button
+                            onClick={() => { setShowManualInput(false); setManualAddress(''); }}
+                            className="px-3 py-2 rounded-lg border border-white/20 text-white/60 text-sm hover:text-white hover:border-white/40 transition-all"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-3 gap-2">
                         <button
@@ -923,9 +951,9 @@ ${realPriceData ? `
                         </button>
                       </div>
                     )}
-                    {analysisData?.location_accuracy === null && !isAnalyzing && (
+                    {!showManualInput && !isAnalyzing && (
                       <p className="text-white/40 text-xs text-center">
-                        💡 부정확 선택 시 자동으로 재분석합니다
+                        💡 부정확 선택 시 주소를 직접 입력하여 재분석합니다
                       </p>
                     )}
                   </div>
