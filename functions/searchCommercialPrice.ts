@@ -113,7 +113,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 도로명 검색 결과 없거나 지번 주소인 경우 → 동/구 필터로 fallback
+    // 도로명 주소인데 도로명 매칭 0건이면 fallback 하지 않음 (엉뚱한 매칭 방지)
+    if (roadAddress && records.length === 0) {
+      return Response.json({ success: false, message: 'DB에 해당 도로명 거래 데이터 없음' });
+    }
+
+    // 지번 주소인 경우 → 동/구 필터로 fallback
     if (records.length === 0) {
       const filterTarget = dong ? `${district} ${dong}` : district;
       try {
