@@ -172,14 +172,18 @@ Deno.serve(async (req) => {
       }
 
       // ② 지번 매칭 (지번 주소인 경우) - 반드시 있어야 함
+      // 부번(-X)이 있는 경우 정확 매칭만 허용 (예: 242-21 ≠ 242-45)
+      // 부번이 없는 경우(본번만) 본번 매칭도 허용
       if (!roadAddress && inputJibun) {
+        const inputHasSub = inputJibun.includes('-');
         const candidates = getJibunCandidates(row);
         for (const candidate of candidates) {
           if (jibunExactMatches(inputJibun, candidate)) {
             score += 120;
             hasRequiredMatch = true;
             break;
-          } else if (jibunMatches(inputJibun, candidate)) {
+          } else if (!inputHasSub && jibunMatches(inputJibun, candidate)) {
+            // 부번 없는 경우만 본번 매칭 허용
             score += 80;
             hasRequiredMatch = true;
             break;
