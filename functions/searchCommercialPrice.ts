@@ -157,42 +157,58 @@ Deno.serve(async (req) => {
 
     const scored = records.map(row => {
       let score = 0;
+      let hasRequiredMatch = false; // 핵심 매칭 여부 (지번 or 도로명 직접 매칭)
 
-      // ① 도로명 매칭 (도로명 주소인 경우)
+      // ① 도로명 매칭 (도로명 주소인 경우) - 반드시 있어야 함
       if (roadAddress) {
-        const rowRoad = row.도로명 || row.도로명대지위치_표제부 || '';
-        if (rowRoad && address.includes(rowRoad.replace(/\s*\([^)]+\)/, '').trim())) score += 120;
-        else if (rowRoad && rowRoad.includes(address.replace(/서울특별시\s+/, '').replace(/강남구\s+/, ''))) score += 80;
-      }
-
-      // ② 지번 매칭 (도로명 주소인 경우 스킵)
-      if (inputJibun) {
-        const candidates = getJibunCandidates(row);
-        for (const candidate of candidates) {
-          if (jibunExactMatches(inputJibun, candidate)) { score += 120; break; }
-          else if (jibunMatches(inputJibun, candidate)) { score += 80; break; }
+        const rowRoad = (row.도로명 || row.도로명대지위치_표제부 || '').replace(/\s*\([^)]+\)/, '').trim();
+        // 입력 주소가 DB 도로명을 포함하거나, DB 도로명이 입력 주소의 핵심 부분과 일치
+        const roadMatch = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
+        const roadKey = roadMatch ? `${roadMatch[1]} ${roadMatch[2]}`.trim() : null;
+        if (roadKey && rowRoad.includes(roadKey)) {
+          score += 120;
+          hasRequiredMatch = true;
         }
       }
 
-      // ③ 동 매칭
-      if (dong && (row.시군구 || '').includes(dong)) score += 30;
+      // ② 지번 매칭 (지번 주소인 경우) - 반드시 있어야 함
+      if (!roadAddress && inputJibun) {
+        const candidates = getJibunCandidates(row);
+        for (const candidate of candidates) {
+          if (jibunExactMatches(inputJibun, candidate)) {
+            score += 120;
+            hasRequiredMatch = true;
+            break;
+          } else if (jibunMatches(inputJibun, candidate)) {
+            score += 80;
+            hasRequiredMatch = true;
+            break;
+          }
+        }
+      }
+
+      // 핵심 매칭 없으면 0점 처리 (필터링됨)
+      if (!hasRequiredMatch) return { ...row, _score: 0 };
+
+      // ③ 동 매칭 (보조 점수)
+      if (dong && (row.시군구 || '').includes(dong)) score += 20;
 
       // ④ 매칭단계 보너스
-      if (row.매칭단계 && row.매칭단계 !== '매칭실패') score += 20;
+      if (row.매칭단계 && row.매칭단계 !== '매칭실패') score += 10;
 
-      // ⑤ 건축연도 유사도
+      // ⑤ 건축연도 유사도 (보조 점수)
       const year = row.건축년도 ? parseInt(row.건축년도) : null;
       if (estimatedYearNum && year) {
         const diff = Math.abs(estimatedYearNum - year);
-        score += Math.max(0, 15 - diff * 1.5);
+        score += Math.max(0, 10 - diff);
       }
 
-      // ⑥ 면적 유사도
+      // ⑥ 면적 유사도 (보조 점수)
       const area = row.전용연면적 ? parseFloat(row.전용연면적)
                   : row.대지면적 ? parseFloat(row.대지면적) : null;
       if (estimatedAreaSqm && area && area > 0) {
         const ratio = Math.abs(estimatedAreaSqm - area) / Math.max(estimatedAreaSqm, area);
-        score += Math.max(0, 10 - ratio * 10);
+        score += Math.max(0, 5 - ratio * 5);
       }
 
       return { ...row, _score: score };
@@ -207,11 +223,8 @@ Deno.serve(async (req) => {
       시군구: r.시군구, 지번: r.지번, 거래금액: r.거래금액, score: r._score
     })));
 
-    // 최소 점수 기준:
-    // - 도로명 주소: 도로명 직접 매칭(80점) 이상 필요 → 점수 기준 높임
-    // - 지번 주소: 지번 본번 매칭(80점) 이상 필요
-    const minScore = roadAddress ? 100 : 80;
-    const validScored = scored.filter(r => r._score >= minScore);
+    // 핵심 매칭(지번 or 도로명)이 있는 결과만 허용
+    const validScored = scored.filter(r => r._score >= 80);
     if (validScored.length === 0) return Response.json({ success: false, message: '유효한 매칭 없음' });
 
     const results = validScored.slice(0, 5).map(({ _score, id, created_date, updated_date, created_by, ...row }) => {
