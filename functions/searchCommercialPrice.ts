@@ -202,8 +202,11 @@ Deno.serve(async (req) => {
       시군구: r.시군구, 지번: r.지번, 거래금액: r.거래금액, score: r._score
     })));
 
-    // 최소 점수 기준: 지번 본번 매칭(80) 또는 도로명 정확 매칭(120) 이상
-    const validScored = scored.filter(r => r._score >= 80);
+    // 최소 점수 기준:
+    // - 도로명 주소: 도로명 직접 매칭(80점) 이상 필요 → 점수 기준 높임
+    // - 지번 주소: 지번 본번 매칭(80점) 이상 필요
+    const minScore = roadAddress ? 100 : 80;
+    const validScored = scored.filter(r => r._score >= minScore);
     if (validScored.length === 0) return Response.json({ success: false, message: '유효한 매칭 없음' });
 
     const results = validScored.slice(0, 5).map(({ _score, id, created_date, updated_date, created_by, ...row }) => {
