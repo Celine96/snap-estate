@@ -192,6 +192,19 @@ ${addressFromGPS ? `
       console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
     }
 
+    // 실거래가 매매가 직접 변환 (AI에 의존하지 않음)
+    function convertManwon(manwon) {
+      const num = typeof manwon === 'string' ? parseInt(manwon.replace(/,/g, '')) : manwon;
+      if (isNaN(num)) return null;
+      if (num >= 10000) {
+        const eok = Math.floor(num / 10000);
+        const remain = num % 10000;
+        return remain > 0 ? `약 ${eok}억 ${remain.toLocaleString()}만원` : `약 ${eok}억원`;
+      }
+      return `약 ${num.toLocaleString()}만원`;
+    }
+    const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
+
     // 5단계: 상세 분석 (GPS 주소 활용)
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다. 
@@ -212,78 +225,61 @@ ${basicInfo.confidence_notes ? `- 판단 근거: ${basicInfo.confidence_notes}` 
 
 ${realPriceData ? `
 💰 **국토교통부 실거래가 (공식 데이터):**
-- 건물: ${realPriceData.건물명}
-- 거래금액: ${realPriceData.거래금액} 만원
+- 거래금액: ${realPriceSaleStr} (${realPriceData.거래금액}만원)
 - 거래일: ${realPriceData.거래일}
 - 건축년도: ${realPriceData.건축연도}년
-- 층: ${realPriceData.층}층
 - 전용면적: ${realPriceData.전용면적}㎡ (약 ${Math.round(realPriceData.전용면적 * 0.3025)}평)
-- 위치: ${realPriceData.법정동} ${realPriceData.지번}
 
-✅ 이 실거래가를 기준으로 정확하게 산정하세요:
-- 매매가: 실거래가 ±5% 범위
-- 전세가: 매매가의 60-70%
+⚠️ 매매가는 이미 확정됨. 아래 항목만 추정하세요:
+- 전세가: 매매가(${realPriceSaleStr})의 60-70%
 - 월세: 전세가 대비 연 5-7% 수익률 기준
 ` : `
 ⚠️ 실거래가 데이터 없음 - 주변 시세 기반으로 신중하게 추정하세요.
+- 매매가, 전세가, 월세 모두 추정
 `}
 
-🔍 **정확한 분석 요구사항:**
+🔍 **분석 요구사항:**
 
 1. **건물 스펙 분석** (사진 기반):
-   - 정확한 층수 (1층부터 세어 확인)
-   - 건축 연도 추정 (외관 상태, 건축 스타일)
-   - 대략적인 면적 (층당 면적 × 층수)
+   - 정확한 층수, 건축 연도 추정, 대략적인 면적
 
-2. **시세 산정** (2026년 1월 기준):
-   - 매매가: ${realPriceData ? '실거래가 기준' : '주변 시세 참고'}
-   - 전세가: 매매가의 60-70% (주거용 건물만 해당, 상가/오피스는 제외)
-   - 월세: 보증금/월세 (예: 5천만원/120만원)
-   
-3. **주변 환경** (사진에서 보이는 것만):
-   - 교통: 지하철역, 버스 정류장 거리
-   - 편의시설: 편의점, 은행, 음식점 등
-   - 상권: 주변 상가 밀집도
+2. **주변 환경** (사진에서 보이는 것만):
+   - 교통, 편의시설, 상권
 
-4. **용도지역 및 법적 정보**:
-   - 토지이음(https://www.eum.go.kr) 사이트에서 해당 지번의 공식 정보 검색
-   - 용도지역, 건폐율, 용적률 정확히 확인
-   - 법적 제한사항, 개발계획 등 공식 데이터 참고
+3. **용도지역 및 법적 정보**:
+   - 토지이음(https://www.eum.go.kr)에서 해당 지번 공식 정보 검색
 
-⚠️ 주의사항:
-- 보이지 않는 정보는 "확인 불가"로 표시
-- 과장하지 말고 현실적으로 평가
-- 가격은 "약 X억 X천만원" 형식으로 명확하게`,
+⚠️ 주의: 보이지 않는 정보는 "확인 불가"로 표시. 가격은 "약 X억 X천만원" 형식으로`,
       file_urls: [file_url],
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
         properties: {
-          building_name: { type: "string", description: "건물명" },
-          address: { type: "string", description: "주소" },
-          district: { type: "string", description: "구/동" },
+          building_name: { type: "string" },
+          address: { type: "string" },
+          district: { type: "string" },
           building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
-          estimated_year: { type: "string", description: "추정 건축연도" },
-          estimated_floors: { type: "number", description: "추정 층수" },
-          estimated_area_pyeong: { type: "string", description: "추정 면적(평)" },
-          estimated_price_sale: { type: "string", description: "추정 매매가" },
+          estimated_year: { type: "string" },
+          estimated_floors: { type: "number" },
+          estimated_area_pyeong: { type: "string" },
+          estimated_price_sale: { type: "string", description: realPriceData ? "실거래가로 이미 확정됨 - null 반환" : "추정 매매가" },
           estimated_price_rent: { type: "string", description: "추정 전세가 (주거용 건물만, 상가/오피스는 null)" },
           estimated_price_monthly: { type: "string", description: "추정 월세/임차료 (보증금/월세)" },
-          price_trend: { type: "string", description: "시세 동향 설명" },
-          building_features: { type: "array", items: { type: "string" }, description: "건물 특징들" },
-          nearby_facilities: { type: "array", items: { type: "string" }, description: "주변 시설 추정" },
-          latitude: { type: "number", description: "추정 위도" },
-          longitude: { type: "number", description: "추정 경도" },
+          price_trend: { type: "string" },
+          building_features: { type: "array", items: { type: "string" } },
+          nearby_facilities: { type: "array", items: { type: "string" } },
+          latitude: { type: "number" },
+          longitude: { type: "number" },
           confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
-          analysis_summary: { type: "string", description: "종합 분석 요약 (3~4문장)" },
+          analysis_summary: { type: "string" },
           zoning_info: {
             type: "object",
             properties: {
-              land_use_zone: { type: "string", description: "용도지역 (예: 제2종일반주거지역)" },
-              building_to_land_ratio: { type: "string", description: "건폐율 (예: 60%)" },
-              floor_area_ratio: { type: "string", description: "용적률 (예: 200%)" },
-              legal_restrictions: { type: "array", items: { type: "string" }, description: "법적 제한사항 리스트" },
-              development_plan: { type: "string", description: "개발계획 정보" }
+              land_use_zone: { type: "string" },
+              building_to_land_ratio: { type: "string" },
+              floor_area_ratio: { type: "string" },
+              legal_restrictions: { type: "array", items: { type: "string" } },
+              development_plan: { type: "string" }
             }
           }
         }
