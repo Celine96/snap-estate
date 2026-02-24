@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, X, MapPin } from 'lucide-react';
+import { Building2, X, MapPin, Share2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,6 +10,8 @@ import ImageUploader from '../components/building/ImageUploader';
 import AnalysisResult from '../components/building/AnalysisResult';
 import RecentAnalyses from '../components/building/RecentAnalyses';
 import ZoningInfo from '../components/building/ZoningInfo';
+import InvestmentScore from '../components/building/InvestmentScore';
+import RentalAnalysis from '../components/building/RentalAnalysis';
 import { useAnalysis, ANALYSIS_STEPS } from '@/hooks/useAnalysis';
 
 // Fix leaflet marker icon
@@ -43,6 +45,30 @@ export default function Home() {
     handleLocationAccuracy,
     handleBack,
   } = useAnalysis();
+
+  const handleShare = async () => {
+    if (!analysisData) return;
+    const shareText = [
+      `🏢 ${analysisData.building_name || '건물 분석 결과'}`,
+      analysisData.address ? `📍 ${analysisData.address}` : '',
+      analysisData.estimated_price_sale ? `💰 매매가: ${analysisData.estimated_price_sale}` : '',
+      analysisData.estimated_price_rent ? `🏠 전세가: ${analysisData.estimated_price_rent}` : '',
+      analysisData.estimated_price_monthly ? `📅 월세: ${analysisData.estimated_price_monthly}` : '',
+      '',
+      'SnapEstate - AI 건물 분석'
+    ].filter(Boolean).join('\n');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: analysisData.building_name || 'SnapEstate 분석 결과', text: shareText });
+      } catch (e) {
+        if (e.name !== 'AbortError') await navigator.clipboard.writeText(shareText);
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      alert('분석 결과가 클립보드에 복사되었습니다.');
+    }
+  };
 
   // 업로드 화면
   if (!showResult) {
@@ -199,13 +225,22 @@ export default function Home() {
                     매물 정보
                   </button>
                 </div>
-                <button
-                  onClick={() => setIsPanelOpen(false)}
-                  aria-label="패널 닫기"
-                  className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleShare}
+                    aria-label="분석 결과 공유"
+                    className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setIsPanelOpen(false)}
+                    aria-label="패널 닫기"
+                    className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -359,6 +394,14 @@ export default function Home() {
               {activeTab === 'property' && (
                 <div id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
                   <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
+
+                  {analysisData?.investment_score && (
+                    <InvestmentScore data={analysisData.investment_score} />
+                  )}
+
+                  {analysisData?.rental_analysis && (
+                    <RentalAnalysis data={analysisData.rental_analysis} />
+                  )}
 
                   {analysisData?.zoning_info && (
                     <ZoningInfo data={analysisData.zoning_info} />

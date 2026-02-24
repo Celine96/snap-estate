@@ -335,6 +335,26 @@ ${realPriceData ? `
                   legal_restrictions: { type: "array", items: { type: "string" } },
                   development_plan: { type: "string" }
                 }
+              },
+              investment_score: {
+                type: "object",
+                description: "투자 지표 (0~100점)",
+                properties: {
+                  overall: { type: "number", description: "종합 투자점수 (0-100)" },
+                  location: { type: "number", description: "입지 점수 (0-100)" },
+                  profitability: { type: "number", description: "수익성 점수 (0-100)" },
+                  growth_potential: { type: "number", description: "성장 가능성 점수 (0-100)" }
+                }
+              },
+              rental_analysis: {
+                type: "object",
+                description: "임대 수익률 분석",
+                properties: {
+                  monthly_income: { type: "string", description: "월 임대수익 (예: 약 150만원)" },
+                  annual_yield: { type: "string", description: "연 수익률 (예: 4.5%)" },
+                  total_deposit: { type: "string", description: "총 보증금 (예: 약 2억원)" },
+                  occupancy_rate: { type: "string", description: "예상 공실률 (예: 5%)" }
+                }
               }
             }
           }
