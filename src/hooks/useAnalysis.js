@@ -84,7 +84,8 @@ export function useAnalysis() {
 
             // 주소 조합
             const roadAddress = [province, city, district, road, houseNumber].filter(Boolean).join(' ');
-            const jibunAddress = [province, city, district, neighbourhood].filter(Boolean).join(' ');
+            // 지번 주소에 번지(house_number)를 포함시킴 (검색 정확도 핵심)
+            const jibunAddress = [province, city, district, neighbourhood, houseNumber].filter(Boolean).join(' ');
 
             // 구 이름 추출 (XX구)
             const districtMatch = (roadAddress + ' ' + jibunAddress).match(/([가-힣]+구)/);
@@ -97,6 +98,8 @@ export function useAnalysis() {
               district: districtMatch ? districtMatch[1] : district,
               dong: dongMatch ? dongMatch[1] : neighbourhood
             };
+
+            console.log('[역지오코딩] 결과:', JSON.stringify(addressFromGPS));
           }
         } catch (error) {
           console.log('GPS 역지오코딩 실패:', error);
@@ -198,6 +201,7 @@ ${addressFromGPS ? `
 
       const searchAddress = addressFromGPS?.jibun_address || basicInfo.address;
 
+      // 1차: DB 내 상업거래 데이터 검색
       try {
         const realPrice = await base44.functions.searchCommercialPrice({
           address: searchAddress,
@@ -211,7 +215,43 @@ ${addressFromGPS ? `
           priceType = "최근 실거래가";
         }
       } catch (error) {
-        console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
+        console.log('DB 실거래가 조회 실패:', error);
+      }
+
+      // 2차: DB에서 못 찾으면 국토교통부 공공 API로 fallback
+      if (!realPriceData) {
+        try {
+          const govPrice = await base44.functions.getRealEstatePrice({
+            address: searchAddress,
+            buildingName: basicInfo.building_name,
+            buildingType: basicInfo.building_type,
+            estimatedYear: quickEstimates?.year,
+            estimatedArea: quickEstimates?.area_pyeong
+          });
+
+          if (govPrice.data?.success && govPrice.data.data && govPrice.data.data.length > 0) {
+            const govItem = govPrice.data.data[0];
+            // 국토교통부 API 응답을 DB 결과와 동일한 형태로 변환
+            const rawAmount = (govItem.거래금액 || '0').toString().replace(/,/g, '').replace(/[^0-9]/g, '');
+            realPriceData = {
+              건물명: govItem.건물명 || basicInfo.building_name,
+              거래금액: parseInt(rawAmount) || 0,
+              거래일: govItem.거래일,
+              건축연도: govItem.건축연도 ? parseInt(govItem.건축연도) : null,
+              전용면적: govItem.전용면적 ? parseFloat(govItem.전용면적) : null,
+              층: govItem.층 || '',
+              법정동: govItem.법정동,
+              지번: govItem.지번,
+              건축물주용도: govItem.용도 || basicInfo.building_type,
+              용도지역: '',
+              거래유형: '',
+              매칭점수: 0
+            };
+            priceType = "국토교통부 실거래가";
+          }
+        } catch (error) {
+          console.log('국토교통부 API 조회 실패, AI 추정으로 전환:', error);
+        }
       }
 
       const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
@@ -337,23 +377,69 @@ ${realPriceData ? `
     setAnalysisData(item);
     setShowResult(true);
 
-    // 실거래가 재조회 시도 (신규 분석과 동일한 로직)
+    // 실거래가 재조회 시도 (DB → 국토교통부 API fallback)
     try {
       const searchAddress = item.address || item.district;
       if (!searchAddress) return;
+      const estArea = item.estimated_area_pyeong ? parseFloat(item.estimated_area_pyeong) : undefined;
 
-      const realPrice = await base44.functions.invoke('searchCommercialPrice', {
-        address: searchAddress,
-        buildingType: item.building_type,
-        estimatedYear: item.estimated_year,
-        estimatedArea: item.estimated_area_pyeong ? parseFloat(item.estimated_area_pyeong) : undefined
-      });
+      let realPriceData = null;
+      let priceType = null;
 
-      if (realPrice.data?.success && realPrice.data.data?.length > 0) {
-        const realPriceData = realPrice.data.data[0];
-        const updated = { ...item, real_price_data: realPriceData, price_type: '최근 실거래가' };
+      // 1차: DB 검색
+      try {
+        const realPrice = await base44.functions.searchCommercialPrice({
+          address: searchAddress,
+          buildingType: item.building_type,
+          estimatedYear: item.estimated_year,
+          estimatedArea: estArea
+        });
+        if (realPrice.data?.success && realPrice.data.data?.length > 0) {
+          realPriceData = realPrice.data.data[0];
+          priceType = '최근 실거래가';
+        }
+      } catch (e) {
+        console.log('DB 실거래가 재조회 실패:', e);
+      }
+
+      // 2차: 국토교통부 API fallback
+      if (!realPriceData) {
+        try {
+          const govPrice = await base44.functions.getRealEstatePrice({
+            address: searchAddress,
+            buildingName: item.building_name,
+            buildingType: item.building_type,
+            estimatedYear: item.estimated_year,
+            estimatedArea: estArea
+          });
+          if (govPrice.data?.success && govPrice.data.data?.length > 0) {
+            const govItem = govPrice.data.data[0];
+            const rawAmount = (govItem.거래금액 || '0').toString().replace(/,/g, '').replace(/[^0-9]/g, '');
+            realPriceData = {
+              건물명: govItem.건물명 || item.building_name,
+              거래금액: parseInt(rawAmount) || 0,
+              거래일: govItem.거래일,
+              건축연도: govItem.건축연도 ? parseInt(govItem.건축연도) : null,
+              전용면적: govItem.전용면적 ? parseFloat(govItem.전용면적) : null,
+              층: govItem.층 || '',
+              법정동: govItem.법정동,
+              지번: govItem.지번,
+              건축물주용도: govItem.용도 || item.building_type,
+              용도지역: '',
+              거래유형: '',
+              매칭점수: 0
+            };
+            priceType = '국토교통부 실거래가';
+          }
+        } catch (e) {
+          console.log('국토교통부 API 재조회 실패:', e);
+        }
+      }
+
+      if (realPriceData && priceType) {
+        const updated = { ...item, real_price_data: realPriceData, price_type: priceType };
         setAnalysisData(updated);
-        await base44.entities.BuildingAnalysis.update(item.id, { real_price_data: realPriceData, price_type: '최근 실거래가' });
+        await base44.entities.BuildingAnalysis.update(item.id, { real_price_data: realPriceData, price_type: priceType });
         refetch();
       }
     } catch (e) {
@@ -377,22 +463,60 @@ ${realPriceData ? `
     try {
       const file_url = analysisData.image_url;
 
-      // 수동 입력 주소로 실거래가 조회
+      // 수동 입력 주소로 실거래가 조회 (DB → 국토교통부 API fallback)
       let realPriceData = null;
       let priceType = "AI 추정가";
+      const manualAddr = manualAddress.trim();
+      const estArea = analysisData.estimated_area_pyeong ? parseFloat(analysisData.estimated_area_pyeong) : undefined;
+
+      // 1차: DB 검색
       try {
         const realPrice = await base44.functions.searchCommercialPrice({
-          address: manualAddress.trim(),
+          address: manualAddr,
           buildingType: analysisData.building_type,
           estimatedYear: analysisData.estimated_year,
-          estimatedArea: analysisData.estimated_area_pyeong ? parseFloat(analysisData.estimated_area_pyeong) : undefined
+          estimatedArea: estArea
         });
         if (realPrice.data?.success && realPrice.data.data?.length > 0) {
           realPriceData = realPrice.data.data[0];
           priceType = "최근 실거래가";
         }
       } catch (e) {
-        console.log('실거래가 조회 실패:', e);
+        console.log('DB 실거래가 조회 실패:', e);
+      }
+
+      // 2차: 국토교통부 API fallback
+      if (!realPriceData) {
+        try {
+          const govPrice = await base44.functions.getRealEstatePrice({
+            address: manualAddr,
+            buildingName: analysisData.building_name,
+            buildingType: analysisData.building_type,
+            estimatedYear: analysisData.estimated_year,
+            estimatedArea: estArea
+          });
+          if (govPrice.data?.success && govPrice.data.data?.length > 0) {
+            const govItem = govPrice.data.data[0];
+            const rawAmount = (govItem.거래금액 || '0').toString().replace(/,/g, '').replace(/[^0-9]/g, '');
+            realPriceData = {
+              건물명: govItem.건물명 || analysisData.building_name,
+              거래금액: parseInt(rawAmount) || 0,
+              거래일: govItem.거래일,
+              건축연도: govItem.건축연도 ? parseInt(govItem.건축연도) : null,
+              전용면적: govItem.전용면적 ? parseFloat(govItem.전용면적) : null,
+              층: govItem.층 || '',
+              법정동: govItem.법정동,
+              지번: govItem.지번,
+              건축물주용도: govItem.용도 || analysisData.building_type,
+              용도지역: '',
+              거래유형: '',
+              매칭점수: 0
+            };
+            priceType = "국토교통부 실거래가";
+          }
+        } catch (e) {
+          console.log('국토교통부 API 조회 실패:', e);
+        }
       }
 
       // 수동 주소로 상세 분석

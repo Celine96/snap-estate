@@ -17,10 +17,9 @@ function isRoadAddress(address) {
   return /[가-힣0-9]+(로|길)\s*\d/.test(address);
 }
 
-// 지번 주소에서 순수 지번 추출 (도로명 주소는 null 반환)
+// 지번 주소에서 순수 지번 추출
 function extractJibun(address) {
   if (!address) return null;
-  if (isRoadAddress(address)) return null; // 도로명 주소는 지번 추출 안 함
 
   // "번지" 앞 숫자 (예: "논현동 16-39번지" → "16-39")
   const withBunji = address.match(/(\d+(?:-\d+)?)\s*번지/);
@@ -31,6 +30,13 @@ function extractJibun(address) {
   if (trailing) return trailing[1];
 
   return null;
+}
+
+// 도로명이 아닌 순수 지번 주소에서만 지번 추출
+function extractJibunFromAddress(address) {
+  if (!address) return null;
+  if (isRoadAddress(address)) return null;
+  return extractJibun(address);
 }
 
 // "번지" 문자열 정규화 (레코드 지번 필드가 전체 주소 형태일 때 처리)
@@ -67,6 +73,12 @@ function getJibunCandidates(row) {
   return candidates;
 }
 
+// 도로명에서 핵심 키 추출
+function extractRoadKey(address) {
+  const roadMatch = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
+  return roadMatch ? `${roadMatch[1]} ${roadMatch[2]}`.trim() : null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -79,46 +91,33 @@ Deno.serve(async (req) => {
 
     const district = extractDistrict(address);
     const dong = extractDong(address);
-    const inputJibun = extractJibun(address);
-    const roadAddress = isRoadAddress(address);
+    const inputJibun = extractJibunFromAddress(address);
+    const roadAddr = isRoadAddress(address);
+    const roadKey = roadAddr ? extractRoadKey(address) : null;
 
-    console.log(`[검색] district=${district}, dong=${dong}, jibun=${inputJibun}, 도로명=${roadAddress}`);
+    console.log(`[검색] district=${district}, dong=${dong}, jibun=${inputJibun}, 도로명=${roadAddr}, roadKey=${roadKey}`);
 
     if (!district) return Response.json({ success: false, message: '지역구 식별 불가' });
 
-    // 도로명 주소인 경우 도로명 필드로 우선 검색
+    // ── 1차: 도로명 주소로 검색 ──
     let records = [];
 
-    if (roadAddress) {
-      // 도로명에서 핵심 도로명 추출: "XX로(숫자)길" 또는 "XX로/길" + 번호
-      // 예: "논현로112길 3" → "논현로112길", "테헤란로 123" → "테헤란로 123"
-      const roadMatch = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
-      const roadKey = roadMatch ? `${roadMatch[1]} ${roadMatch[2]}`.trim() : null;
-      console.log(`[검색] 도로명 키: ${roadKey}`);
-
-      if (roadKey) {
-        try {
-          records = await base44.asServiceRole.entities.CommercialTransaction.filter(
-            { 도로명: { $regex: roadKey } },
-            '-계약년월',
-            200
-          );
-        } catch (_e) {
-          const all = await base44.asServiceRole.entities.CommercialTransaction.list('-계약년월', 15000);
-          records = (all || []).filter(r => (r.도로명 || '').includes(roadKey));
-        }
-        // 해제 거래 제외
-        records = records.filter(r => !r.해제사유발생일 || r.해제사유발생일 === '-');
-        console.log(`[검색] 도로명 매칭 ${records.length}건`);
+    if (roadAddr && roadKey) {
+      try {
+        records = await base44.asServiceRole.entities.CommercialTransaction.filter(
+          { 도로명: { $regex: roadKey } },
+          '-계약년월',
+          200
+        );
+      } catch (_e) {
+        const all = await base44.asServiceRole.entities.CommercialTransaction.list('-계약년월', 15000);
+        records = (all || []).filter(r => (r.도로명 || '').includes(roadKey));
       }
+      records = records.filter(r => !r.해제사유발생일 || r.해제사유발생일 === '-');
+      console.log(`[검색] 도로명 매칭 ${records.length}건`);
     }
 
-    // 도로명 주소인데 도로명 매칭 0건이면 fallback 하지 않음 (엉뚱한 매칭 방지)
-    if (roadAddress && records.length === 0) {
-      return Response.json({ success: false, message: 'DB에 해당 도로명 거래 데이터 없음' });
-    }
-
-    // 지번 주소인 경우 → 동/구 필터로 fallback
+    // ── 2차: 동/구 기반 검색 (도로명 결과 없거나 지번 주소일 때) ──
     if (records.length === 0) {
       const filterTarget = dong ? `${district} ${dong}` : district;
       try {
@@ -132,6 +131,7 @@ Deno.serve(async (req) => {
         records = (all || []).filter(r => (r.시군구 || '').includes(filterTarget));
       }
 
+      // 동 기반 결과 없으면 구 전체로 확대
       if (records.length === 0 && dong) {
         try {
           records = await base44.asServiceRole.entities.CommercialTransaction.filter(
@@ -144,7 +144,6 @@ Deno.serve(async (req) => {
           records = (all || []).filter(r => (r.시군구 || '').includes(district));
         }
       }
-      // 해제 거래 제외
       records = records.filter(r => !r.해제사유발생일 || r.해제사유발생일 === '-');
     }
 
@@ -154,48 +153,52 @@ Deno.serve(async (req) => {
 
     const estimatedYearNum = estimatedYear ? parseInt(estimatedYear) : null;
     const estimatedAreaSqm = estimatedArea ? estimatedArea * 3.305785 : null;
+    const hasJibunOrRoad = !!(inputJibun || roadKey); // 지번/도로명 번호가 있는지 여부
 
     const scored = records.map(row => {
       let score = 0;
-      let hasRequiredMatch = false; // 핵심 매칭 여부 (지번 or 도로명 직접 매칭)
+      let matchType = 'none'; // 매칭 유형 추적
 
-      // ① 도로명 매칭 (도로명 주소인 경우) - 반드시 있어야 함
-      if (roadAddress) {
+      // ① 도로명 매칭
+      if (roadKey) {
         const rowRoad = (row.도로명 || row.도로명대지위치_표제부 || '').replace(/\s*\([^)]+\)/, '').trim();
-        // 입력 주소가 DB 도로명을 포함하거나, DB 도로명이 입력 주소의 핵심 부분과 일치
-        const roadMatch = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
-        const roadKey = roadMatch ? `${roadMatch[1]} ${roadMatch[2]}`.trim() : null;
-        if (roadKey && rowRoad.includes(roadKey)) {
+        if (rowRoad.includes(roadKey)) {
           score += 120;
-          hasRequiredMatch = true;
+          matchType = 'road_exact';
         }
       }
 
-      // ② 지번 매칭 (지번 주소인 경우) - 반드시 있어야 함
-      // 부번(-X)이 있는 경우 정확 매칭만 허용 (예: 242-21 ≠ 242-45)
-      // 부번이 없는 경우(본번만) 본번 매칭도 허용
-      if (!roadAddress && inputJibun) {
+      // ② 지번 매칭
+      if (inputJibun && matchType === 'none') {
         const inputHasSub = inputJibun.includes('-');
         const candidates = getJibunCandidates(row);
         for (const candidate of candidates) {
           if (jibunExactMatches(inputJibun, candidate)) {
             score += 120;
-            hasRequiredMatch = true;
+            matchType = 'jibun_exact';
             break;
           } else if (!inputHasSub && jibunMatches(inputJibun, candidate)) {
-            // 부번 없는 경우만 본번 매칭 허용
             score += 80;
-            hasRequiredMatch = true;
+            matchType = 'jibun_main';
             break;
           }
         }
       }
 
-      // 핵심 매칭 없으면 0점 처리 (필터링됨)
-      if (!hasRequiredMatch) return { ...row, _score: 0 };
+      // ③ 동 매칭 (지번/도로명 번호가 없는 경우 핵심 매칭으로 승격)
+      const dongMatched = dong && (row.시군구 || '').includes(dong);
+      if (dongMatched) {
+        if (!hasJibunOrRoad && matchType === 'none') {
+          // 지번 번호 없이 "강남구 논현동"만 있는 경우 → 동 매칭을 핵심으로 사용
+          score += 50;
+          matchType = 'dong_only';
+        } else {
+          score += 20;
+        }
+      }
 
-      // ③ 동 매칭 (보조 점수)
-      if (dong && (row.시군구 || '').includes(dong)) score += 20;
+      // 매칭 유형이 없으면 0점 처리
+      if (matchType === 'none') return { ...row, _score: 0 };
 
       // ④ 매칭단계 보너스
       if (row.매칭단계 && row.매칭단계 !== '매칭실패') score += 10;
@@ -215,7 +218,7 @@ Deno.serve(async (req) => {
         score += Math.max(0, 5 - ratio * 5);
       }
 
-      return { ...row, _score: score };
+      return { ...row, _score: score, _matchType: matchType };
     });
 
     scored.sort((a, b) => {
@@ -224,14 +227,17 @@ Deno.serve(async (req) => {
     });
 
     console.log(`[검색] 상위 결과:`, scored.slice(0, 3).map(r => ({
-      시군구: r.시군구, 지번: r.지번, 거래금액: r.거래금액, score: r._score
+      시군구: r.시군구, 지번: r.지번, 도로명: r.도로명, 거래금액: r.거래금액, score: r._score, matchType: r._matchType
     })));
 
-    // 핵심 매칭(지번 or 도로명)이 있는 결과만 허용
-    const validScored = scored.filter(r => r._score >= 80);
+    // 매칭 유형별 최소 점수 기준
+    // 지번/도로명 번호가 있을 때: 80점 이상 (정확한 매칭 요구)
+    // 동만 있을 때: 50점 이상 (동 + 보조 점수로 최선의 결과 반환)
+    const minScore = hasJibunOrRoad ? 80 : 50;
+    const validScored = scored.filter(r => r._score >= minScore);
     if (validScored.length === 0) return Response.json({ success: false, message: '유효한 매칭 없음' });
 
-    const results = validScored.slice(0, 5).map(({ _score, id, created_date, updated_date, created_by, ...row }) => {
+    const results = validScored.slice(0, 5).map(({ _score, _matchType, id, created_date, updated_date, created_by, ...row }) => {
       const rawPrice = (row.거래금액 || '0').toString().replace(/,/g, '').replace(/[^0-9]/g, '');
       const yyyymm = row.계약년월 || '';
       const 거래일 = yyyymm.length === 6
@@ -250,7 +256,8 @@ Deno.serve(async (req) => {
         건축물주용도: row.건축물주용도,
         용도지역: row.용도지역,
         거래유형: row.거래유형,
-        매칭점수: _score
+        매칭점수: _score,
+        매칭유형: _matchType
       };
     });
 
