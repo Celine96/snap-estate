@@ -63,11 +63,14 @@ export default function Home() {
       try {
         await navigator.share({ title: analysisData.building_name || 'SnapEstate 분석 결과', text: shareText });
       } catch (e) {
-        if (e.name !== 'AbortError') await navigator.clipboard.writeText(shareText);
+        if (e.name !== 'AbortError') {
+          await navigator.clipboard.writeText(shareText);
+          toast.success('클립보드에 복사되었습니다');
+        }
       }
     } else {
       await navigator.clipboard.writeText(shareText);
-      alert('분석 결과가 클립보드에 복사되었습니다.');
+      toast.success('클립보드에 복사되었습니다');
     }
   };
 
