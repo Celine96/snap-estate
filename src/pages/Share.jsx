@@ -15,9 +15,9 @@ export default function Share() {
     const id = params.get('id');
     if (!id) { setError('잘못된 링크입니다.'); setLoading(false); return; }
 
-    base44.entities.BuildingAnalysis.filter({ id })
-      .then(results => {
-        if (results && results.length > 0) setData(results[0]);
+    base44.functions.invoke('getSharedAnalysis', { id })
+      .then(res => {
+        if (res.data?.data) setData(res.data.data);
         else setError('분석 정보를 찾을 수 없습니다.');
       })
       .catch(() => setError('데이터를 불러오는 중 오류가 발생했습니다.'))
