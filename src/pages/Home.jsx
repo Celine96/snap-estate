@@ -48,29 +48,26 @@ export default function Home() {
   } = useAnalysis();
 
   const handleShare = async () => {
-    if (!analysisData) return;
-    const shareText = [
-      `🏢 ${analysisData.building_name || '건물 분석 결과'}`,
-      analysisData.address ? `📍 ${analysisData.address}` : '',
-      analysisData.estimated_price_sale ? `💰 매매가: ${analysisData.estimated_price_sale}` : '',
-      analysisData.estimated_price_rent ? `🏠 전세가: ${analysisData.estimated_price_rent}` : '',
-      analysisData.estimated_price_monthly ? `📅 월세: ${analysisData.estimated_price_monthly}` : '',
-      '',
-      'SnapEstate - AI 건물 분석'
-    ].filter(Boolean).join('\n');
+    if (!analysisData?.id) return;
+    const shareUrl = `${window.location.origin}${createPageUrl('Share')}?id=${analysisData.id}`;
+    const shareData = {
+      title: `${analysisData.building_name || '건물 분석 결과'} - SnapEstate`,
+      text: `${analysisData.building_name || '건물'} 매물 정보를 확인해보세요!`,
+      url: shareUrl,
+    };
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: analysisData.building_name || 'SnapEstate 분석 결과', text: shareText });
+        await navigator.share(shareData);
       } catch (e) {
         if (e.name !== 'AbortError') {
-          await navigator.clipboard.writeText(shareText);
-          toast.success('클립보드에 복사되었습니다');
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success('링크가 복사되었습니다');
         }
       }
     } else {
-      await navigator.clipboard.writeText(shareText);
-      toast.success('클립보드에 복사되었습니다');
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('링크가 복사되었습니다');
     }
   };
 
