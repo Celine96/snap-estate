@@ -13,6 +13,7 @@ import ZoningInfo from '../components/building/ZoningInfo';
 import InvestmentScore from '../components/building/InvestmentScore';
 import RentalAnalysis from '../components/building/RentalAnalysis';
 import { useAnalysis, ANALYSIS_STEPS } from '@/hooks/useAnalysis';
+import { toast } from 'sonner';
 
 // Fix leaflet marker icon
 delete L.Icon.Default.prototype._getIconUrl;
