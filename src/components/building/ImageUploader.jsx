@@ -3,7 +3,17 @@ import { Upload, Camera, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ImageUploader({ onImageSelected, isAnalyzing }) {
+const STEP_MESSAGES = {
+  uploading: '이미지를 업로드하고 있습니다...',
+  extracting_location: '위치 정보를 추출하고 있습니다...',
+  reverse_geocoding: 'GPS 좌표로 주소를 확인하고 있습니다...',
+  analyzing_building: '건물 정보를 분석하고 있습니다...',
+  querying_price: '실거래가를 조회하고 있습니다...',
+  detailed_analysis: '상세 분석을 진행하고 있습니다...',
+  saving: '분석 결과를 저장하고 있습니다...',
+};
+
+export default function ImageUploader({ onImageSelected, isAnalyzing, analysisStep, analysisError }) {
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
@@ -27,8 +37,14 @@ export default function ImageUploader({ onImageSelected, isAnalyzing }) {
     }
   };
 
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
   const handleFile = (file) => {
     if (!file.type.startsWith('image/')) return;
+    if (file.size > MAX_FILE_SIZE) {
+      alert('파일 크기가 너무 큽니다. 20MB 이하의 이미지를 업로드해주세요.');
+      return;
+    }
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     onImageSelected(file);
@@ -120,8 +136,24 @@ export default function ImageUploader({ onImageSelected, isAnalyzing }) {
                     </div>
                     <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-transparent border-t-amber-400 animate-spin" style={{ animationDuration: '1.5s' }} />
                   </div>
-                  <p className="text-white/90 font-medium mt-4">AI가 건물을 분석중입니다...</p>
+                  <p className="text-white/90 font-medium mt-4">
+                    {analysisStep ? (STEP_MESSAGES[analysisStep] || 'AI가 건물을 분석중입니다...') : 'AI가 건물을 분석중입니다...'}
+                  </p>
                   <p className="text-white/50 text-sm mt-1">잠시만 기다려주세요</p>
+                </div>
+              )}
+              {analysisError && !isAnalyzing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                  <div className="w-16 h-16 rounded-full border-2 border-red-400/30 flex items-center justify-center mb-4">
+                    <X className="w-8 h-8 text-red-400" />
+                  </div>
+                  <p className="text-red-400 font-medium text-center px-4">{analysisError}</p>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); clearImage(); }}
+                    className="mt-4 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white/80 text-sm hover:bg-white/20 transition-all"
+                  >
+                    다시 시도
+                  </button>
                 </div>
               )}
             </div>

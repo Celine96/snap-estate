@@ -23,8 +23,32 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// 만원 단위를 한국식 억/만원 표기로 변환
+function convertManwon(manwon) {
+  const num = typeof manwon === 'string' ? parseInt(manwon.replace(/,/g, '')) : manwon;
+  if (isNaN(num)) return null;
+  if (num >= 10000) {
+    const eok = Math.floor(num / 10000);
+    const remain = num % 10000;
+    return remain > 0 ? `약 ${eok}억 ${remain.toLocaleString()}만원` : `약 ${eok}억원`;
+  }
+  return `약 ${num.toLocaleString()}만원`;
+}
+
+const ANALYSIS_STEPS = {
+  uploading: '이미지를 업로드하고 있습니다...',
+  extracting_location: '위치 정보를 추출하고 있습니다...',
+  reverse_geocoding: 'GPS 좌표로 주소를 확인하고 있습니다...',
+  analyzing_building: '건물 정보를 분석하고 있습니다...',
+  querying_price: '실거래가를 조회하고 있습니다...',
+  detailed_analysis: '상세 분석을 진행하고 있습니다...',
+  saving: '분석 결과를 저장하고 있습니다...',
+};
+
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(null);
+  const [analysisError, setAnalysisError] = useState(null);
   const [analysisData, setAnalysisData] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -52,50 +76,72 @@ export default function Home() {
 
   const handleImageSelected = async (file) => {
     setIsAnalyzing(true);
-    
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    
-    // 1단계: 위치 정보 추출 (EXIF GPS 우선)
-    let locationData = null;
-    try {
-      const location = await base44.functions.getImageLocation({ imageUrl: file_url });
-      locationData = location;
-    } catch (error) {
-      console.log('위치 추출 실패:', error);
-    }
-    
-    // 2단계: GPS 좌표로 정확한 주소 찾기 (역지오코딩)
-    let addressFromGPS = null;
-    if (locationData?.latitude && locationData?.longitude) {
-      try {
-        const geoResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `다음 GPS 좌표의 정확한 도로명 주소와 지번 주소를 찾아주세요:
-위도: ${locationData.latitude}
-경도: ${locationData.longitude}
+    setAnalysisError(null);
+    setAnalysisStep('uploading');
 
-네이버 지도나 카카오맵에서 이 좌표를 검색하고, 정확한 주소를 반환하세요.
-반드시 "서울특별시 XX구 XX동" 형식으로 시작해야 합니다.`,
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              road_address: { type: "string", description: "도로명 주소 (예: 서울특별시 강남구 테헤란로 123)" },
-              jibun_address: { type: "string", description: "지번 주소 (예: 서울특별시 강남구 역삼동 123-45)" },
-              district: { type: "string", description: "구 (예: 강남구)" },
-              dong: { type: "string", description: "동 (예: 역삼동)" }
-            }
-          }
-        });
-        addressFromGPS = geoResult;
-        console.log('GPS 역지오코딩 성공:', geoResult);
+    try {
+      // 1단계: 이미지 업로드
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // 2단계: 위치 정보 추출 (EXIF GPS 우선)
+      setAnalysisStep('extracting_location');
+      let locationData = null;
+      try {
+        const location = await base44.functions.getImageLocation({ imageUrl: file_url });
+        locationData = location;
       } catch (error) {
-        console.log('GPS 역지오코딩 실패:', error);
+        console.log('위치 추출 실패:', error);
       }
-    }
-    
-    // 3단계: 기본 정보 추출 (GPS 주소 활용)
-    const basicInfo = await base44.integrations.Core.InvokeLLM({
-      prompt: `당신은 한국 부동산 전문가입니다. 이 건물 사진을 매우 정확하게 분석하세요.
+
+      // 3단계: GPS 좌표로 정확한 주소 찾기 (역지오코딩 - Nominatim API 사용)
+      let addressFromGPS = null;
+      if (locationData?.latitude && locationData?.longitude) {
+        setAnalysisStep('reverse_geocoding');
+        try {
+          const geoResponse = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${locationData.latitude}&lon=${locationData.longitude}&zoom=18&addressdetails=1&accept-language=ko`,
+            { headers: { 'User-Agent': 'SnapEstate/1.0' } }
+          );
+          const geoData = await geoResponse.json();
+
+          if (geoData && geoData.address) {
+            const addr = geoData.address;
+            const city = addr.city || addr.town || addr.county || '';
+            const district = addr.borough || addr.suburb || addr.quarter || addr.city_district || '';
+            const neighbourhood = addr.neighbourhood || addr.village || '';
+            const road = addr.road || '';
+            const houseNumber = addr.house_number || '';
+
+            // 도/시 레벨
+            const province = addr.state || addr.province || '';
+
+            // 주소 조합
+            const roadAddress = [province, city, district, road, houseNumber].filter(Boolean).join(' ');
+            const jibunAddress = [province, city, district, neighbourhood].filter(Boolean).join(' ');
+
+            // 구 이름 추출 (XX구)
+            const districtMatch = (roadAddress + ' ' + jibunAddress).match(/([가-힣]+구)/);
+            // 동 이름 추출 (XX동)
+            const dongMatch = (jibunAddress + ' ' + geoData.display_name).match(/([가-힣]+동)\b/);
+
+            addressFromGPS = {
+              road_address: roadAddress || geoData.display_name,
+              jibun_address: jibunAddress || geoData.display_name,
+              district: districtMatch ? districtMatch[1] : district,
+              dong: dongMatch ? dongMatch[1] : neighbourhood
+            };
+          }
+        } catch (error) {
+          console.log('GPS 역지오코딩 실패:', error);
+        }
+      }
+
+      // 4단계: 기본 정보 추출 (GPS 주소 활용)
+      setAnalysisStep('analyzing_building');
+      let basicInfo;
+      try {
+        basicInfo = await base44.integrations.Core.InvokeLLM({
+          prompt: `당신은 한국 부동산 전문가입니다. 이 건물 사진을 매우 정확하게 분석하세요.
 
 ${addressFromGPS ? `
 🎯 GPS 좌표로 확인된 정확한 주소:
@@ -116,100 +162,95 @@ ${addressFromGPS ? `
 1. **간판/표지판 텍스트 읽기** (가장 중요!)
    - 건물명, 상호명을 정확히 읽으세요
    - 숫자, 영문, 한글 모두 정확히
-   
+
 2. **주변 랜드마크 확인**
    - 지하철역, 버스정류장 이름
    - 주변 유명 건물, 프랜차이즈
    - 도로명 표지판
-   
+
 3. **건물 특징 분석**
    - 건축 스타일 (현대식/구형)
    - 층수, 외관 재질
    - 상가/주거 혼합 여부
-   
+
 4. **인터넷 검색 활용**
    - 네이버 지도에서 주변 검색
    - 건물명으로 정확히 매칭
    - 도로명 주소 확인
 
 ⚠️ 중요: 추측하지 말고 보이는 정보만 사용하세요!`,
-      file_urls: [file_url],
-      add_context_from_internet: true,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          address: { type: "string", description: addressFromGPS ? "GPS 주소 기반 확인된 전체 주소" : "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
-          building_name: { type: "string", description: "정확한 건물명 (간판 그대로)" },
-          district: { type: "string", description: addressFromGPS ? `${addressFromGPS.district}` : "구/동 (예: 강남구, 역삼동)" },
-          building_type: { 
-            type: "string", 
-            enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
-            description: "건물 유형" 
-          },
-          confidence_notes: { type: "string", description: "판단 근거 (어떤 정보로 확인했는지)" }
-        }
+          file_urls: [file_url],
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              address: { type: "string", description: addressFromGPS ? "GPS 주소 기반 확인된 전체 주소" : "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
+              building_name: { type: "string", description: "정확한 건물명 (간판 그대로)" },
+              district: { type: "string", description: addressFromGPS ? `${addressFromGPS.district}` : "구/동 (예: 강남구, 역삼동)" },
+              building_type: {
+                type: "string",
+                enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
+                description: "건물 유형"
+              },
+              confidence_notes: { type: "string", description: "판단 근거 (어떤 정보로 확인했는지)" }
+            }
+          }
+        });
+      } catch (error) {
+        throw new Error('건물 기본 정보 분석에 실패했습니다. 다시 시도해주세요.');
       }
-    });
 
-    // 4단계: 실거래가 조회 (GPS 주소 우선 사용)
-    let realPriceData = null;
-    let priceType = "AI 추정가";
-    
-    const searchAddress = addressFromGPS?.jibun_address || basicInfo.address;
-    console.log('실거래가 검색 주소:', searchAddress);
-    
-    // AI 추정 건축연도/면적 빠른 추출 (실거래가 매칭용)
-    let quickEstimates = null;
-    try {
-      quickEstimates = await base44.integrations.Core.InvokeLLM({
-        prompt: `사진 속 건물의 건축연도와 대략적인 면적을 추정하세요:
+      // 5단계: 실거래가 조회 (GPS 주소 우선 사용)
+      setAnalysisStep('querying_price');
+      let realPriceData = null;
+      let priceType = "AI 추정가";
+
+      const searchAddress = addressFromGPS?.jibun_address || basicInfo.address;
+
+      // AI 추정 건축연도/면적 빠른 추출 (실거래가 매칭용)
+      let quickEstimates = null;
+      try {
+        quickEstimates = await base44.integrations.Core.InvokeLLM({
+          prompt: `사진 속 건물의 건축연도와 대략적인 면적을 추정하세요:
 - 건축연도: 외관 상태, 건축 스타일로 판단
 - 면적: 층수 × 층당 면적으로 대략 계산 (평 단위)`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            year: { type: "string", description: "추정 건축연도 (예: 1995)" },
-            area_pyeong: { type: "number", description: "추정 면적(평)" }
+          file_urls: [file_url],
+          response_json_schema: {
+            type: "object",
+            properties: {
+              year: { type: "string", description: "추정 건축연도 (예: 1995)" },
+              area_pyeong: { type: "number", description: "추정 면적(평)" }
+            }
           }
+        });
+      } catch (e) {
+        console.log('빠른 추정 실패:', e);
+      }
+
+      try {
+        const realPrice = await base44.functions.searchCommercialPrice({
+          address: searchAddress,
+          buildingType: basicInfo.building_type,
+          estimatedYear: quickEstimates?.year,
+          estimatedArea: quickEstimates?.area_pyeong
+        });
+
+        if (realPrice.data?.success && realPrice.data.data && realPrice.data.data.length > 0) {
+          realPriceData = realPrice.data.data[0];
+          priceType = "최근 실거래가";
         }
-      });
-    } catch (e) {
-      console.log('빠른 추정 실패:', e);
-    }
-    
-    try {
-      const realPrice = await base44.functions.searchCommercialPrice({
-        address: searchAddress,
-        buildingType: basicInfo.building_type,
-        estimatedYear: quickEstimates?.year,
-        estimatedArea: quickEstimates?.area_pyeong
-      });
-      
-      if (realPrice.data?.success && realPrice.data.data && realPrice.data.data.length > 0) {
-        realPriceData = realPrice.data.data[0];
-        priceType = "최근 실거래가";
+      } catch (error) {
+        console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
       }
-    } catch (error) {
-      console.log('실거래가 조회 실패, AI 추정으로 전환:', error);
-    }
 
-    // 실거래가 매매가 직접 변환 (AI에 의존하지 않음)
-    function convertManwon(manwon) {
-      const num = typeof manwon === 'string' ? parseInt(manwon.replace(/,/g, '')) : manwon;
-      if (isNaN(num)) return null;
-      if (num >= 10000) {
-        const eok = Math.floor(num / 10000);
-        const remain = num % 10000;
-        return remain > 0 ? `약 ${eok}억 ${remain.toLocaleString()}만원` : `약 ${eok}억원`;
-      }
-      return `약 ${num.toLocaleString()}만원`;
-    }
-    const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
+      const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
 
-    // 5단계: 상세 분석 (GPS 주소 활용)
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다. 
+      // 6단계: 상세 분석 (GPS 주소 활용)
+      setAnalysisStep('detailed_analysis');
+      let result;
+      try {
+        result = await base44.integrations.Core.InvokeLLM({
+          prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다.
 이 건물을 매우 정확하게 분석하여 실제 시세에 가깝게 평가하세요.
 
 📍 **확인된 건물 정보:**
@@ -252,65 +293,73 @@ ${realPriceData ? `
    - 토지이음(https://www.eum.go.kr)에서 해당 지번 공식 정보 검색
 
 ⚠️ 주의: 보이지 않는 정보는 "확인 불가"로 표시. 가격은 "약 X억 X천만원" 형식으로`,
-      file_urls: [file_url],
-      add_context_from_internet: true,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          building_name: { type: "string" },
-          address: { type: "string" },
-          district: { type: "string" },
-          building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
-          estimated_year: { type: "string" },
-          estimated_floors: { type: "number" },
-          estimated_area_pyeong: { type: "string" },
-          estimated_price_sale: { type: "string", description: realPriceData ? "실거래가로 이미 확정됨 - null 반환" : "추정 매매가" },
-          estimated_price_rent: { type: "string", description: "추정 전세가 (주거용 건물만, 상가/오피스는 null)" },
-          estimated_price_monthly: { type: "string", description: "추정 월세/임차료 (보증금/월세)" },
-          price_trend: { type: "string" },
-          building_features: { type: "array", items: { type: "string" } },
-          nearby_facilities: { type: "array", items: { type: "string" } },
-          latitude: { type: "number" },
-          longitude: { type: "number" },
-          confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
-          analysis_summary: { type: "string" },
-          zoning_info: {
+          file_urls: [file_url],
+          add_context_from_internet: true,
+          response_json_schema: {
             type: "object",
             properties: {
-              land_use_zone: { type: "string" },
-              building_to_land_ratio: { type: "string" },
-              floor_area_ratio: { type: "string" },
-              legal_restrictions: { type: "array", items: { type: "string" } },
-              development_plan: { type: "string" }
+              building_name: { type: "string" },
+              address: { type: "string" },
+              district: { type: "string" },
+              building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
+              estimated_year: { type: "string" },
+              estimated_floors: { type: "number" },
+              estimated_area_pyeong: { type: "string" },
+              estimated_price_sale: { type: "string", description: realPriceData ? "실거래가로 이미 확정됨 - null 반환" : "추정 매매가" },
+              estimated_price_rent: { type: "string", description: "추정 전세가 (주거용 건물만, 상가/오피스는 null)" },
+              estimated_price_monthly: { type: "string", description: "추정 월세/임차료 (보증금/월세)" },
+              price_trend: { type: "string" },
+              building_features: { type: "array", items: { type: "string" } },
+              nearby_facilities: { type: "array", items: { type: "string" } },
+              latitude: { type: "number" },
+              longitude: { type: "number" },
+              confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
+              analysis_summary: { type: "string" },
+              zoning_info: {
+                type: "object",
+                properties: {
+                  land_use_zone: { type: "string" },
+                  building_to_land_ratio: { type: "string" },
+                  floor_area_ratio: { type: "string" },
+                  legal_restrictions: { type: "array", items: { type: "string" } },
+                  development_plan: { type: "string" }
+                }
+              }
             }
           }
-        }
+        });
+      } catch (error) {
+        throw new Error('건물 상세 분석에 실패했습니다. 다시 시도해주세요.');
       }
-    });
 
-    const savedData = {
-      image_url: file_url,
-      ...result,
-      // 핵심 필드는 반드시 덮어씌워 AI 결과가 오염하지 못하도록 함
-      building_name: basicInfo.building_name,
-      address: addressFromGPS?.jibun_address || basicInfo.address,
-      district: basicInfo.district,
-      building_type: basicInfo.building_type,
-      // price_type은 반드시 실거래가 조회 결과로만 결정 (AI가 임의로 바꾸지 못하도록)
-      price_type: priceType,
-      real_price_data: realPriceData || null,
-      // 실거래가가 있으면 매매가는 DB 값으로 덮어씀 (AI 추정값 무시)
-      ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
-      latitude: locationData?.latitude || result.latitude,
-      longitude: locationData?.longitude || result.longitude,
-      location_source: locationData?.source || 'AI 추정'
-    };
-    
-    const createdData = await base44.entities.BuildingAnalysis.create(savedData);
-    setAnalysisData(createdData);
-    setShowResult(true);
-    setIsAnalyzing(false);
-    refetch();
+      // 7단계: 결과 저장
+      setAnalysisStep('saving');
+      const savedData = {
+        image_url: file_url,
+        ...result,
+        building_name: basicInfo.building_name,
+        address: addressFromGPS?.jibun_address || basicInfo.address,
+        district: basicInfo.district,
+        building_type: basicInfo.building_type,
+        price_type: priceType,
+        real_price_data: realPriceData || null,
+        ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
+        latitude: locationData?.latitude || result.latitude,
+        longitude: locationData?.longitude || result.longitude,
+        location_source: locationData?.source || 'AI 추정'
+      };
+
+      const createdData = await base44.entities.BuildingAnalysis.create(savedData);
+      setAnalysisData(createdData);
+      setShowResult(true);
+      refetch();
+    } catch (error) {
+      console.error('분석 실패:', error);
+      setAnalysisError(error.message || '분석 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisStep(null);
+    }
   };
 
   const handleSelectRecent = async (item) => {
@@ -351,30 +400,36 @@ ${realPriceData ? `
     if (!manualAddress.trim() || !analysisData?.id) return;
     setShowManualInput(false);
     setIsAnalyzing(true);
+    setAnalysisError(null);
+    setAnalysisStep('querying_price');
 
-    const file_url = analysisData.image_url;
-
-    // 수동 입력 주소로 실거래가 조회
-    let realPriceData = null;
-    let priceType = "AI 추정가";
     try {
-      const realPrice = await base44.functions.searchCommercialPrice({
-        address: manualAddress.trim(),
-        buildingType: analysisData.building_type,
-        estimatedYear: analysisData.estimated_year,
-        estimatedArea: analysisData.estimated_area_pyeong ? parseFloat(analysisData.estimated_area_pyeong) : undefined
-      });
-      if (realPrice.data?.success && realPrice.data.data?.length > 0) {
-        realPriceData = realPrice.data.data[0];
-        priceType = "최근 실거래가";
-      }
-    } catch (e) {
-      console.log('실거래가 조회 실패:', e);
-    }
+      const file_url = analysisData.image_url;
 
-    // 수동 주소로 상세 분석
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다.
+      // 수동 입력 주소로 실거래가 조회
+      let realPriceData = null;
+      let priceType = "AI 추정가";
+      try {
+        const realPrice = await base44.functions.searchCommercialPrice({
+          address: manualAddress.trim(),
+          buildingType: analysisData.building_type,
+          estimatedYear: analysisData.estimated_year,
+          estimatedArea: analysisData.estimated_area_pyeong ? parseFloat(analysisData.estimated_area_pyeong) : undefined
+        });
+        if (realPrice.data?.success && realPrice.data.data?.length > 0) {
+          realPriceData = realPrice.data.data[0];
+          priceType = "최근 실거래가";
+        }
+      } catch (e) {
+        console.log('실거래가 조회 실패:', e);
+      }
+
+      // 수동 주소로 상세 분석
+      setAnalysisStep('detailed_analysis');
+      let result;
+      try {
+        result = await base44.integrations.Core.InvokeLLM({
+          prompt: `당신은 15년 경력의 한국 부동산 전문 감정평가사입니다.
 
 📍 사용자가 직접 입력한 정확한 주소: ${manualAddress.trim()}
 
@@ -386,69 +441,70 @@ ${realPriceData ? `💰 국토교통부 실거래가:
 ⚠️ 매매가는 이미 확정됨. 전세가/월세만 추정하세요.` : '⚠️ 실거래가 없음 - 주변 시세 기반으로 추정하세요.'}
 
 정확한 건물 스펙, 시세, 주변 환경을 평가하세요.`,
-      file_urls: [file_url],
-      add_context_from_internet: true,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          building_name: { type: "string" },
-          address: { type: "string" },
-          district: { type: "string" },
-          building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
-          estimated_year: { type: "string" },
-          estimated_floors: { type: "number" },
-          estimated_area_pyeong: { type: "string" },
-          estimated_price_sale: { type: "string" },
-          estimated_price_rent: { type: "string" },
-          estimated_price_monthly: { type: "string" },
-          price_trend: { type: "string" },
-          building_features: { type: "array", items: { type: "string" } },
-          nearby_facilities: { type: "array", items: { type: "string" } },
-          latitude: { type: "number" },
-          longitude: { type: "number" },
-          confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
-          analysis_summary: { type: "string" },
-          zoning_info: {
+          file_urls: [file_url],
+          add_context_from_internet: true,
+          response_json_schema: {
             type: "object",
             properties: {
-              land_use_zone: { type: "string" },
-              building_to_land_ratio: { type: "string" },
-              floor_area_ratio: { type: "string" },
-              legal_restrictions: { type: "array", items: { type: "string" } },
-              development_plan: { type: "string" }
+              building_name: { type: "string" },
+              address: { type: "string" },
+              district: { type: "string" },
+              building_type: { type: "string", enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"] },
+              estimated_year: { type: "string" },
+              estimated_floors: { type: "number" },
+              estimated_area_pyeong: { type: "string" },
+              estimated_price_sale: { type: "string" },
+              estimated_price_rent: { type: "string" },
+              estimated_price_monthly: { type: "string" },
+              price_trend: { type: "string" },
+              building_features: { type: "array", items: { type: "string" } },
+              nearby_facilities: { type: "array", items: { type: "string" } },
+              latitude: { type: "number" },
+              longitude: { type: "number" },
+              confidence: { type: "string", enum: ["높음", "보통", "낮음"] },
+              analysis_summary: { type: "string" },
+              zoning_info: {
+                type: "object",
+                properties: {
+                  land_use_zone: { type: "string" },
+                  building_to_land_ratio: { type: "string" },
+                  floor_area_ratio: { type: "string" },
+                  legal_restrictions: { type: "array", items: { type: "string" } },
+                  development_plan: { type: "string" }
+                }
+              }
             }
           }
-        }
+        });
+      } catch (error) {
+        throw new Error('주소 기반 재분석에 실패했습니다. 다시 시도해주세요.');
       }
-    });
 
-    function convertManwon(manwon) {
-      const num = typeof manwon === 'string' ? parseInt(manwon.replace(/,/g, '')) : manwon;
-      if (isNaN(num)) return null;
-      if (num >= 10000) {
-        const eok = Math.floor(num / 10000);
-        const remain = num % 10000;
-        return remain > 0 ? `약 ${eok}억 ${remain.toLocaleString()}만원` : `약 ${eok}억원`;
-      }
-      return `약 ${num.toLocaleString()}만원`;
+      const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
+
+      setAnalysisStep('saving');
+      const updatedData = {
+        ...analysisData,
+        ...result,
+        address: manualAddress.trim(),
+        price_type: priceType,
+        real_price_data: realPriceData || null,
+        ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
+        location_accuracy: null,
+      };
+
+      await base44.entities.BuildingAnalysis.update(analysisData.id, updatedData);
+      setAnalysisData(updatedData);
+      setManualAddress('');
+      refetch();
+    } catch (error) {
+      console.error('재분석 실패:', error);
+      setAnalysisError(error.message || '재분석 중 오류가 발생했습니다.');
+      setShowManualInput(true);
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisStep(null);
     }
-    const realPriceSaleStr = realPriceData ? convertManwon(realPriceData.거래금액) : null;
-
-    const updatedData = {
-      ...analysisData,
-      ...result,
-      address: manualAddress.trim(),
-      price_type: priceType,
-      real_price_data: realPriceData || null,
-      ...(realPriceSaleStr ? { estimated_price_sale: realPriceSaleStr } : {}),
-      location_accuracy: null,
-    };
-
-    await base44.entities.BuildingAnalysis.update(analysisData.id, updatedData);
-    setAnalysisData(updatedData);
-    setManualAddress('');
-    refetch();
-    setIsAnalyzing(false);
   };
 
   const handleLocationAccuracy = async (accuracy) => {
@@ -520,6 +576,8 @@ ${realPriceData ? `💰 국토교통부 실거래가:
             <ImageUploader
               onImageSelected={handleImageSelected}
               isAnalyzing={isAnalyzing}
+              analysisStep={analysisStep}
+              analysisError={analysisError}
             />
 
             <div className="flex flex-wrap justify-center gap-3">
@@ -688,9 +746,11 @@ ${realPriceData ? `💰 국토교통부 실거래가:
                   <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3">
                     <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
                     {isAnalyzing ? (
-                      <div className="flex items-center justify-center gap-2 py-4">
+                      <div className="flex flex-col items-center justify-center gap-2 py-4">
                         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        <span className="text-white/60 text-sm">재분석 중...</span>
+                        <span className="text-white/60 text-sm">
+                          {analysisStep ? (ANALYSIS_STEPS[analysisStep] || '재분석 중...') : '재분석 중...'}
+                        </span>
                       </div>
                     ) : showManualInput ? (
                       <div className="space-y-2">
@@ -757,9 +817,14 @@ ${realPriceData ? `💰 국토교통부 실거래가:
                         </button>
                       </div>
                     )}
-                    {!showManualInput && !isAnalyzing && (
+                    {analysisError && !isAnalyzing && (
+                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <p className="text-red-400 text-xs text-center">{analysisError}</p>
+                      </div>
+                    )}
+                    {!showManualInput && !isAnalyzing && !analysisError && (
                       <p className="text-white/40 text-xs text-center">
-                        💡 부정확 선택 시 주소를 직접 입력하여 재분석합니다
+                        부정확 선택 시 주소를 직접 입력하여 재분석합니다
                       </p>
                     )}
                   </div>
