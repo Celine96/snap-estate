@@ -14,6 +14,7 @@ import InvestmentScore from '../components/building/InvestmentScore';
 import RentalAnalysis from '../components/building/RentalAnalysis';
 import { useAnalysis, ANALYSIS_STEPS } from '@/hooks/useAnalysis';
 import { toast } from 'sonner';
+import { createPageUrl } from '@/utils';
 
 // Fix leaflet marker icon
 delete L.Icon.Default.prototype._getIconUrl;
