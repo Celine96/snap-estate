@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Clock, ChevronRight } from 'lucide-react';
-import moment from 'moment';
+import { Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 export default function RecentAnalyses({ analyses, onSelect }) {
   if (!analyses || analyses.length === 0) return null;
@@ -42,7 +43,7 @@ export default function RecentAnalyses({ analyses, onSelect }) {
                 {item.building_name || '건물 분석'}
               </p>
               <p className="text-white/30 text-[10px] mt-0.5">
-                {moment(item.created_date).fromNow()}
+                {formatDistanceToNow(new Date(item.created_date), { addSuffix: true, locale: ko })}
               </p>
             </div>
           </motion.button>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import EditableField from './EditableField';
+import { convertManwon } from '@/utils/format';
 
 const InfoCard = ({ icon: Icon, label, value, delay = 0 }) => (
   <motion.div
@@ -53,18 +54,6 @@ const PriceCard = ({ label, value, icon: Icon, color, delay = 0, onEdit, dateInf
   </motion.div>
 );
 
-function formatManwon(manwon) {
-  if (!manwon && manwon !== 0) return null;
-  const num = typeof manwon === 'string' ? parseInt(manwon.replace(/,/g, '')) : manwon;
-  if (isNaN(num)) return null;
-  if (num >= 10000) {
-    const eok = Math.floor(num / 10000);
-    const remain = num % 10000;
-    return remain > 0 ? `약 ${eok}억 ${remain.toLocaleString()}만원` : `약 ${eok}억원`;
-  }
-  return `약 ${num.toLocaleString()}만원`;
-}
-
 export default function AnalysisResult({ data, onUpdate }) {
   if (!data) return null;
 
@@ -75,7 +64,7 @@ export default function AnalysisResult({ data, onUpdate }) {
   };
 
   const realPriceSale = data.real_price_data?.거래금액
-    ? formatManwon(data.real_price_data.거래금액)
+    ? convertManwon(data.real_price_data.거래금액)
     : null;
 
   const confidenceColors = {
