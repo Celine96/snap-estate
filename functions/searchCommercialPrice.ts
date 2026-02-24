@@ -60,15 +60,20 @@ function jibunExactMatches(inputJibun, recordJibun) {
 }
 
 // 레코드에서 지번 후보들 추출 ("번지" 제거 후 순수 번호 추출)
+// 도로명 주소가 포함된 필드는 건물번호를 지번으로 오인할 수 있으므로 제외
 function getJibunCandidates(row) {
   const candidates = [];
-  const sources = [row.지번, row.대지위치_표제부, row.도로명대지위치_표제부];
-  for (const s of sources) {
-    if (!s) continue;
-    // 먼저 "번지" 제거 후 순수 지번 추출 시도
-    const normalized = normalizeBunji(s);
-    const j = extractJibun(normalized) || extractJibun(s);
+  // 지번 필드만 우선 사용 (가장 신뢰도 높음)
+  if (row.지번) {
+    const normalized = normalizeBunji(row.지번);
+    const j = extractJibun(normalized) || extractJibun(row.지번);
     if (j) candidates.push(j);
+  }
+  // 대지위치_표제부는 도로명이 아닌 경우에만 사용
+  if (row.대지위치_표제부 && !isRoadAddress(row.대지위치_표제부)) {
+    const normalized = normalizeBunji(row.대지위치_표제부);
+    const j = extractJibun(normalized) || extractJibun(row.대지위치_표제부);
+    if (j && !candidates.includes(j)) candidates.push(j);
   }
   return candidates;
 }
