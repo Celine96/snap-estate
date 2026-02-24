@@ -66,9 +66,12 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
             transition={{ duration: 0.2 }}
           >
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="건물 사진 업로드 영역. 클릭하거나 이미지를 드래그하세요."
               className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 cursor-pointer
-                ${dragActive 
-                  ? 'border-amber-400 bg-amber-400/5' 
+                ${dragActive
+                  ? 'border-amber-400 bg-amber-400/5'
                   : 'border-white/20 hover:border-white/40 bg-white/5 hover:bg-white/[0.07]'
                 }`}
               onDragEnter={handleDrag}
@@ -76,11 +79,13 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
               onDragOver={handleDrag}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
             >
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                aria-label="이미지 파일 선택"
                 className="hidden"
                 onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])}
               />
@@ -120,9 +125,10 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
                 className="w-full h-64 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              {!isAnalyzing && (
+              {!isAnalyzing && !analysisError && (
                 <button
                   onClick={(e) => { e.stopPropagation(); clearImage(); }}
+                  aria-label="이미지 삭제"
                   className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-black/70 transition-all"
                 >
                   <X className="w-4 h-4" />

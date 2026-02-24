@@ -140,6 +140,7 @@ export default function Home() {
       {/* 닫기 버튼 */}
       <button
         onClick={handleBack}
+        aria-label="분석 결과 닫기"
         className="absolute top-4 left-4 z-[1000] w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-slate-700/90 transition-all"
       >
         <X className="w-5 h-5" />
@@ -149,7 +150,7 @@ export default function Home() {
       {!isPanelOpen && (
         <button
           onClick={() => setIsPanelOpen(true)}
-          className="absolute top-4 right-4 z-[1000] px-4 py-2.5 rounded-xl bg-white text-slate-900 font-semibold hover:bg-white/90 transition-all shadow-lg"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:top-4 md:left-auto md:translate-x-0 md:right-4 z-[1000] px-4 py-2.5 rounded-xl bg-white text-slate-900 font-semibold hover:bg-white/90 transition-all shadow-lg"
         >
           분석 결과
         </button>
@@ -159,17 +160,20 @@ export default function Home() {
       <AnimatePresence>
         {isPanelOpen && (
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={{ y: '100%', x: 0 }}
+            animate={{ y: 0, x: 0 }}
+            exit={{ y: '100%', x: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="absolute top-0 right-0 h-full w-full md:w-[480px] bg-slate-900 shadow-2xl z-[1000] overflow-y-auto"
+            className="absolute bottom-0 right-0 h-[70vh] w-full md:top-0 md:bottom-auto md:h-full md:w-[480px] bg-slate-900 shadow-2xl z-[1000] overflow-y-auto rounded-t-2xl md:rounded-none"
           >
             {/* 패널 헤더 + 탭 */}
             <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10">
               <div className="flex items-center justify-between p-4 pb-0">
-                <div className="flex gap-2">
+                <div role="tablist" aria-label="분석 결과 탭" className="flex gap-2">
                   <button
+                    role="tab"
+                    aria-selected={activeTab === 'results'}
+                    aria-controls="panel-results"
                     onClick={() => setActiveTab('results')}
                     className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
                       activeTab === 'results'
@@ -177,10 +181,13 @@ export default function Home() {
                         : 'text-white/60 hover:text-white/80'
                     }`}
                   >
-                    <MapPin className="w-4 h-4 inline mr-1" />
+                    <MapPin className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     위치 정보
                   </button>
                   <button
+                    role="tab"
+                    aria-selected={activeTab === 'property'}
+                    aria-controls="panel-property"
                     onClick={() => setActiveTab('property')}
                     className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
                       activeTab === 'property'
@@ -188,12 +195,13 @@ export default function Home() {
                         : 'text-white/60 hover:text-white/80'
                     }`}
                   >
-                    <Building2 className="w-4 h-4 inline mr-1" />
+                    <Building2 className="w-4 h-4 inline mr-1" aria-hidden="true" />
                     매물 정보
                   </button>
                 </div>
                 <button
                   onClick={() => setIsPanelOpen(false)}
+                  aria-label="패널 닫기"
                   className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
                 >
                   <X className="w-5 h-5" />
@@ -204,7 +212,7 @@ export default function Home() {
             <div className="p-4 space-y-4">
               {/* 위치 정보 탭 */}
               {activeTab === 'results' && (
-                <div className="space-y-4">
+                <div id="panel-results" role="tabpanel" aria-labelledby="tab-results" className="space-y-4">
                   <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
                     {analysisData?.image_url && (
                       <img
@@ -291,9 +299,11 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-2" role="group" aria-label="위치 정확도 평가">
                         <button
                           onClick={() => handleLocationAccuracy('incorrect')}
+                          aria-label="위치가 부정확합니다"
+                          aria-pressed={analysisData?.location_accuracy === 'incorrect'}
                           className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
                             analysisData?.location_accuracy === 'incorrect'
                               ? 'bg-red-500/20 border-red-500/50 text-red-400'
@@ -305,6 +315,8 @@ export default function Home() {
                         </button>
                         <button
                           onClick={() => handleLocationAccuracy('nearby')}
+                          aria-label="위치가 근처입니다"
+                          aria-pressed={analysisData?.location_accuracy === 'nearby'}
                           className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
                             analysisData?.location_accuracy === 'nearby'
                               ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
@@ -316,6 +328,8 @@ export default function Home() {
                         </button>
                         <button
                           onClick={() => handleLocationAccuracy('accurate')}
+                          aria-label="위치가 정확합니다"
+                          aria-pressed={analysisData?.location_accuracy === 'accurate'}
                           className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
                             analysisData?.location_accuracy === 'accurate'
                               ? 'bg-green-500/20 border-green-500/50 text-green-400'
@@ -343,7 +357,7 @@ export default function Home() {
 
               {/* 매물 정보 탭 */}
               {activeTab === 'property' && (
-                <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
+                <div id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
                   <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
 
                   {analysisData?.zoning_info && (

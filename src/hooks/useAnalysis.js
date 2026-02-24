@@ -103,12 +103,11 @@ export function useAnalysis() {
         }
       }
 
-      // 4단계: 기본 정보 추출 (GPS 주소 활용)
+      // 4단계: 기본 정보 추출 + 건축연도/면적 추정 (병렬 실행)
       setAnalysisStep('analyzing_building');
-      let basicInfo;
-      try {
-        basicInfo = await base44.integrations.Core.InvokeLLM({
-          prompt: `당신은 한국 부동산 전문가입니다. 이 건물 사진을 매우 정확하게 분석하세요.
+
+      const basicInfoPromise = base44.integrations.Core.InvokeLLM({
+        prompt: `당신은 한국 부동산 전문가입니다. 이 건물 사진을 매우 정확하게 분석하세요.
 
 ${addressFromGPS ? `
 🎯 GPS 좌표로 확인된 정확한 주소:
@@ -146,24 +145,49 @@ ${addressFromGPS ? `
    - 도로명 주소 확인
 
 ⚠️ 중요: 추측하지 말고 보이는 정보만 사용하세요!`,
-          file_urls: [file_url],
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              address: { type: "string", description: addressFromGPS ? "GPS 주소 기반 확인된 전체 주소" : "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
-              building_name: { type: "string", description: "정확한 건물명 (간판 그대로)" },
-              district: { type: "string", description: addressFromGPS ? `${addressFromGPS.district}` : "구/동 (예: 강남구, 역삼동)" },
-              building_type: {
-                type: "string",
-                enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
-                description: "건물 유형"
-              },
-              confidence_notes: { type: "string", description: "판단 근거 (어떤 정보로 확인했는지)" }
-            }
+        file_urls: [file_url],
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            address: { type: "string", description: addressFromGPS ? "GPS 주소 기반 확인된 전체 주소" : "정확한 전체 주소 (서울특별시 XX구 XX동 XX)" },
+            building_name: { type: "string", description: "정확한 건물명 (간판 그대로)" },
+            district: { type: "string", description: addressFromGPS ? `${addressFromGPS.district}` : "구/동 (예: 강남구, 역삼동)" },
+            building_type: {
+              type: "string",
+              enum: ["아파트", "오피스텔", "상가", "빌라/다세대", "단독주택", "오피스", "기타"],
+              description: "건물 유형"
+            },
+            confidence_notes: { type: "string", description: "판단 근거 (어떤 정보로 확인했는지)" }
           }
-        });
-      } catch (error) {
+        }
+      });
+
+      const quickEstimatesPromise = base44.integrations.Core.InvokeLLM({
+        prompt: `사진 속 건물의 건축연도와 대략적인 면적을 추정하세요:
+- 건축연도: 외관 상태, 건축 스타일로 판단
+- 면적: 층수 × 층당 면적으로 대략 계산 (평 단위)`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            year: { type: "string", description: "추정 건축연도 (예: 1995)" },
+            area_pyeong: { type: "number", description: "추정 면적(평)" }
+          }
+        }
+      }).catch((e) => {
+        console.log('빠른 추정 실패:', e);
+        return null;
+      });
+
+      // 두 LLM 호출을 병렬로 실행
+      const [basicInfoResult, quickEstimates] = await Promise.all([
+        basicInfoPromise,
+        quickEstimatesPromise,
+      ]);
+
+      const basicInfo = basicInfoResult;
+      if (!basicInfo) {
         throw new Error('건물 기본 정보 분석에 실패했습니다. 다시 시도해주세요.');
       }
 
@@ -173,26 +197,6 @@ ${addressFromGPS ? `
       let priceType = "AI 추정가";
 
       const searchAddress = addressFromGPS?.jibun_address || basicInfo.address;
-
-      // AI 추정 건축연도/면적 빠른 추출 (실거래가 매칭용)
-      let quickEstimates = null;
-      try {
-        quickEstimates = await base44.integrations.Core.InvokeLLM({
-          prompt: `사진 속 건물의 건축연도와 대략적인 면적을 추정하세요:
-- 건축연도: 외관 상태, 건축 스타일로 판단
-- 면적: 층수 × 층당 면적으로 대략 계산 (평 단위)`,
-          file_urls: [file_url],
-          response_json_schema: {
-            type: "object",
-            properties: {
-              year: { type: "string", description: "추정 건축연도 (예: 1995)" },
-              area_pyeong: { type: "number", description: "추정 면적(평)" }
-            }
-          }
-        });
-      } catch (e) {
-        console.log('빠른 추정 실패:', e);
-      }
 
       try {
         const realPrice = await base44.functions.searchCommercialPrice({
