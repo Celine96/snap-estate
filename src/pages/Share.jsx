@@ -20,7 +20,7 @@ export default function Share() {
       body: JSON.stringify({ id }),
     }).then(r => r.json())
       .then(res => {
-        if (res.data?.data) setData(res.data.data);
+        if (res.data) setData(res.data);
         else setError('분석 정보를 찾을 수 없습니다.');
       })
       .catch(() => setError('데이터를 불러오는 중 오류가 발생했습니다.'))
