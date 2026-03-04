@@ -12,7 +12,7 @@ import RecentAnalyses from '../components/building/RecentAnalyses';
 import ZoningInfo from '../components/building/ZoningInfo';
 import InvestmentScore from '../components/building/InvestmentScore';
 import RentalAnalysis from '../components/building/RentalAnalysis';
-import { useAnalysis, ANALYSIS_STEPS } from '@/hooks/useAnalysis';
+import { useAnalysis, ANALYSIS_STEPS } from '../components/hooks/useAnalysis';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 
