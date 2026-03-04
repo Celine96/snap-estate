@@ -1,6 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 import { jsPDF } from 'npm:jspdf@2.5.1';
 
+const encodeText = async (text) => {
+  if (!text) return text;
+  try {
+    const apiKey = Deno.env.get('Encoding_Api_Key');
+    const response = await fetch('https://api.example.com/encode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ text })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      return result.encoded || text;
+    }
+  } catch {
+    // 인코딩 실패시 원본 텍스트 반환
+  }
+  return text;
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -12,6 +35,22 @@ Deno.serve(async (req) => {
 
     const d = await base44.entities.BuildingAnalysis.get(id);
     if (!d) return Response.json({ error: '데이터를 찾을 수 없습니다.' }, { status: 404 });
+
+    // 모든 한글 텍스트 미리 인코딩
+    const encoded = {
+      building_name: await encodeText(d.building_name || '건물 분석 결과'),
+      address: await encodeText(d.address),
+      confidence: await encodeText(d.confidence),
+      price_trend: await encodeText(d.price_trend),
+      analysis_summary: await encodeText(d.analysis_summary),
+      estimated_price_sale: await encodeText(d.estimated_price_sale),
+      estimated_price_rent: await encodeText(d.estimated_price_rent),
+      estimated_price_monthly: await encodeText(d.estimated_price_monthly),
+      building_type: await encodeText(d.building_type),
+      estimated_year: await encodeText(d.estimated_year),
+      estimated_area_pyeong: await encodeText(d.estimated_area_pyeong),
+      estimated_floors: d.estimated_floors
+    };
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = 210;
