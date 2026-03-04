@@ -267,7 +267,7 @@ export default function Home() {
                   exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.2 }}
                   id="panel-results" role="tabpanel" aria-labelledby="tab-results" className="space-y-4">
-                  <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
+                  <div className="bg-[#1C1C1E] rounded-2xl border border-[#2C2C2E] overflow-hidden">
                     {analysisData?.image_url && (
                       <img
                         src={analysisData.image_url}
@@ -315,38 +315,38 @@ export default function Home() {
                   </div>
 
                   {/* 위치 정확도 평가 */}
-                  <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3">
+                  <div className="bg-[#1C1C1E] rounded-2xl border border-[#2C2C2E] p-4 space-y-3">
                     <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
                     {isAnalyzing ? (
                       <div className="flex flex-col items-center justify-center gap-2 py-4">
-                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        <span className="text-white/60 text-sm">
+                        <div className="w-5 h-5 border-2 border-[#2C2C2E] border-t-[#4D96FF] rounded-full animate-spin" />
+                        <span className="text-[#9AA0A6] text-sm">
                           {analysisStep ? (ANALYSIS_STEPS[analysisStep] || '재분석 중...') : '재분석 중...'}
                         </span>
                       </div>
                     ) : showManualInput ? (
                       <div className="space-y-2">
-                        <p className="text-white/50 text-xs">정확한 지번 또는 도로명 주소를 입력하세요</p>
+                        <p className="text-[#9AA0A6] text-xs">정확한 지번 또는 도로명 주소를 입력하세요</p>
                         <input
                           type="text"
                           value={manualAddress}
                           onChange={(e) => setManualAddress(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleManualAddressSubmit()}
                           placeholder="예: 서울특별시 강남구 논현동 242-21"
-                          className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/40"
+                          className="w-full px-3 py-2 rounded-xl bg-[#121214] border border-[#2C2C2E] text-white text-sm placeholder-[#9AA0A6]/50 focus:outline-none focus:border-[#4D96FF]/40 transition-colors"
                           autoFocus
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={handleManualAddressSubmit}
                             disabled={!manualAddress.trim()}
-                            className="flex-1 py-2 rounded-lg bg-white text-slate-900 text-sm font-semibold hover:bg-white/90 transition-all disabled:opacity-40"
+                            className="flex-1 py-2 rounded-xl bg-[#4D96FF] text-white text-sm font-semibold hover:bg-[#4D96FF]/90 transition-all disabled:opacity-40"
                           >
                             이 주소로 분석
                           </button>
                           <button
                             onClick={() => { setShowManualInput(false); setManualAddress(''); }}
-                            className="px-3 py-2 rounded-lg border border-white/20 text-white/60 text-sm hover:text-white hover:border-white/40 transition-all"
+                            className="px-3 py-2 rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] text-[#9AA0A6] text-sm hover:text-white transition-all"
                           >
                             취소
                           </button>
