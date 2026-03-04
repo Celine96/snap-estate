@@ -257,9 +257,16 @@ export default function Home() {
             </div>
 
             <div className="p-4 space-y-4">
+              <AnimatePresence mode="wait">
               {/* 위치 정보 탭 */}
               {activeTab === 'results' && (
-                <div id="panel-results" role="tabpanel" aria-labelledby="tab-results" className="space-y-4">
+                <motion.div
+                  key="results"
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.2 }}
+                  id="panel-results" role="tabpanel" aria-labelledby="tab-results" className="space-y-4">
                   <div className="bg-white/[0.04] rounded-xl border border-white/10 overflow-hidden">
                     {analysisData?.image_url && (
                       <img
