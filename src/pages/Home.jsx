@@ -77,16 +77,68 @@ export default function Home() {
     if (!analysisData?.id || isExportingPdf) return;
     setIsExportingPdf(true);
     try {
-      const response = await base44.functions.invoke('exportAnalysisPdf', { id: analysisData.id });
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `snapestate_${analysisData.building_name || 'report'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(url);
-      a.remove();
+      const { jsPDF } = await import('npm:jspdf@2.5.1');
+      const html2canvas = (await import('npm:html2canvas@1.4.1')).default;
+
+      const element = document.createElement('div');
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.width = '210mm';
+      element.style.padding = '20mm';
+      element.style.background = '#121214';
+      element.style.color = '#fff';
+      element.style.fontFamily = "'Noto Sans KR', sans-serif";
+      
+      element.innerHTML = `
+        <div style="max-width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #2c2c2e;">
+            <div style="color: #4D96FF; font-size: 20px; font-weight: bold;">SnapEstate</div>
+            <div style="color: #9aa0a6; font-size: 12px;">${new Date().toLocaleDateString('ko-KR')}</div>
+          </div>
+          <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${analysisData.building_name || '건물 분석 결과'}</div>
+          ${analysisData.address ? `<div style="color: #9aa0a6; font-size: 14px; margin-bottom: 15px;">📍 ${analysisData.address}</div>` : ''}
+          ${analysisData.confidence ? `<div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${analysisData.confidence === '높음' ? '#34d399' : analysisData.confidence === '보통' ? '#fbbf24' : '#ef4444'}; color: #1c1c1e;">${analysisData.confidence}</div>` : ''}
+          
+          ${analysisData.image_url ? `<img src="${analysisData.image_url}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 20px;" />` : ''}
+          
+          <div style="color: #9aa0a6; font-size: 12px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-top: 1px solid #2c2c2e; padding-top: 15px;">시세 정보</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+            ${analysisData.estimated_price_sale ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">매매가</div><div style="color: #4D96FF; font-size: 16px; font-weight: bold;">${analysisData.estimated_price_sale}</div></div>` : ''}
+            ${analysisData.estimated_price_rent ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">전세가</div><div style="color: #fff; font-size: 16px; font-weight: bold;">${analysisData.estimated_price_rent}</div></div>` : ''}
+            ${analysisData.estimated_price_monthly ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">월세</div><div style="color: #fff; font-size: 16px; font-weight: bold;">${analysisData.estimated_price_monthly}</div></div>` : ''}
+          </div>
+          
+          <div style="color: #9aa0a6; font-size: 12px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">건물 스펙</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+            ${analysisData.building_type ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">건물 유형</div><div style="color: #fff; font-size: 14px; font-weight: bold;">${analysisData.building_type}</div></div>` : ''}
+            ${analysisData.estimated_year ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">건축연도</div><div style="color: #fff; font-size: 14px; font-weight: bold;">${analysisData.estimated_year}</div></div>` : ''}
+            ${analysisData.estimated_floors ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">층수</div><div style="color: #fff; font-size: 14px; font-weight: bold;">${analysisData.estimated_floors}층</div></div>` : ''}
+            ${analysisData.estimated_area_pyeong ? `<div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px;"><div style="color: #9aa0a6; font-size: 11px; margin-bottom: 5px;">면적</div><div style="color: #fff; font-size: 14px; font-weight: bold;">${analysisData.estimated_area_pyeong}평</div></div>` : ''}
+          </div>
+          
+          ${analysisData.price_trend ? `
+            <div style="color: #9aa0a6; font-size: 12px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">시세 동향</div>
+            <div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 15px; font-size: 13px; line-height: 1.6; color: #fff; margin-bottom: 20px;">${analysisData.price_trend}</div>
+          ` : ''}
+          
+          ${analysisData.analysis_summary ? `
+            <div style="color: #9aa0a6; font-size: 12px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">AI 분석 요약</div>
+            <div style="background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 15px; font-size: 13px; line-height: 1.6; color: #fff;">${analysisData.analysis_summary}</div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.body.appendChild(element);
+      const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#121214', logging: false });
+      document.body.removeChild(element);
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      pdf.save(`snapestate_${analysisData.building_name || 'report'}.pdf`);
       toast.success('PDF가 다운로드되었습니다');
     } catch (e) {
       toast.error('PDF 생성에 실패했습니다');
