@@ -174,13 +174,19 @@ export default function Home() {
         <X className="w-5 h-5" />
       </button>
 
-      {/* 패널 토글 (닫힌 상태) */}
+      {/* 패널 토글 (닫힌 상태) - 미니 카드 */}
       {!isPanelOpen && (
         <button
           onClick={() => setIsPanelOpen(true)}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:top-4 md:left-auto md:translate-x-0 md:right-4 z-[1000] px-4 py-2.5 rounded-xl bg-white text-slate-900 font-semibold hover:bg-white/90 transition-all shadow-lg"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] max-w-sm md:bottom-auto md:top-4 md:left-auto md:translate-x-0 md:right-4 md:w-auto px-4 py-3 rounded-2xl bg-slate-800/95 backdrop-blur-sm border border-white/20 text-white hover:bg-slate-700/95 transition-all shadow-xl flex items-center gap-3"
         >
-          분석 결과
+          {analysisData?.image_url && (
+            <img src={analysisData.image_url} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+          )}
+          <div className="text-left flex-1 min-w-0">
+            <p className="font-semibold text-sm truncate">{analysisData?.building_name || '분석 결과'}</p>
+            <p className="text-white/50 text-xs">자세히 보기 →</p>
+          </div>
         </button>
       )}
 
