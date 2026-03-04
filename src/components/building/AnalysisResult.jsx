@@ -147,15 +147,28 @@ export default function AnalysisResult({ data, onUpdate }) {
               </Badge>
             )}
           </div>
-          {data.real_price_data?.거래일 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-              <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
-              <div className="flex flex-col gap-0.5">
+          {data.real_price_data?.거래일 ? (
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+              <Calendar className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-1">
                 <span className="text-emerald-400 text-xs font-semibold leading-relaxed">
                   {data.real_price_data.거래일.split('-')[0]}년 {data.real_price_data.거래일.split('-')[1]}월 실거래가 기준
                 </span>
                 <span className="text-white/50 text-[10px] leading-relaxed">
-                  거래일: {data.real_price_data.거래일} · {data.real_price_data.건축물주용도 || ''} · {data.real_price_data.용도지역 || ''} (국토교통부)
+                  거래일: {data.real_price_data.거래일} · {data.real_price_data.건축물주용도 || ''} · {data.real_price_data.용도지역 || ''} (국토교통부 실거래가 공개시스템)
+                </span>
+                <span className="text-emerald-300/70 text-[10px] leading-relaxed">
+                  ✓ 실제 신고된 거래 데이터 · 가장 신뢰도 높은 가격 정보
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <Shield className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-amber-400 text-xs font-semibold leading-relaxed">AI 추정가 기준</span>
+                <span className="text-white/50 text-[10px] leading-relaxed">
+                  주변 실거래 데이터를 참고한 AI 추정 · 실제 시세와 차이가 있을 수 있습니다
                 </span>
               </div>
             </div>
