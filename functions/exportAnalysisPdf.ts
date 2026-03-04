@@ -103,12 +103,12 @@ Deno.serve(async (req) => {
 
     // 시세 정보
     setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-    doc.text('시세 정보', 14, y); y += 5;
+    doc.text(await encodeText('시세 정보'), 14, y); y += 5;
 
     const prices = [
-      d.estimated_price_sale ? { label: '매매가', value: d.estimated_price_sale, accent: true } : null,
-      d.estimated_price_rent ? { label: '전세가', value: d.estimated_price_rent } : null,
-      d.estimated_price_monthly ? { label: '월세', value: d.estimated_price_monthly } : null,
+      encoded.estimated_price_sale ? { label: await encodeText('매매가'), value: encoded.estimated_price_sale, accent: true } : null,
+      encoded.estimated_price_rent ? { label: await encodeText('전세가'), value: encoded.estimated_price_rent } : null,
+      encoded.estimated_price_monthly ? { label: await encodeText('월세'), value: encoded.estimated_price_monthly } : null,
     ].filter(Boolean);
 
     if (prices.length > 0) {
