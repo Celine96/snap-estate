@@ -49,27 +49,49 @@ export default function Home() {
     handleBack,
   } = useAnalysis();
 
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
   const handleShare = async () => {
     if (!analysisData?.id) return;
     const shareUrl = `${window.location.origin}${createPageUrl('Share')}?id=${analysisData.id}`;
-    const shareData = {
-      title: `${analysisData.building_name || '건물 분석 결과'} - SnapEstate`,
-      text: `${analysisData.building_name || '건물'} 매물 정보를 확인해보세요!`,
-      url: shareUrl,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (e) {
-        if (e.name !== 'AbortError') {
-          await navigator.clipboard.writeText(shareUrl);
-          toast.success('링크가 복사되었습니다');
-        }
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${analysisData.building_name || '건물 분석 결과'} - SnapEstate`,
+          text: `${analysisData.building_name || '건물'} 매물 정보를 확인해보세요!`,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('링크가 복사되었습니다');
       }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('링크가 복사되었습니다');
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('링크가 복사되었습니다');
+      }
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!analysisData?.id || isExportingPdf) return;
+    setIsExportingPdf(true);
+    try {
+      const response = await base44.functions.invoke('exportAnalysisPdf', { id: analysisData.id });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `snapestate_${analysisData.building_name || 'report'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('PDF가 다운로드되었습니다');
+    } catch (e) {
+      toast.error('PDF 생성에 실패했습니다');
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
