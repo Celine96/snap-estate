@@ -138,8 +138,15 @@ export default function Home() {
       `;
       
       document.body.appendChild(element);
-      const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#121214', logging: false });
+      const canvas = await html2canvas(element, { 
+        scale: 2, 
+        backgroundColor: '#121214', 
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      });
       document.body.removeChild(element);
+      document.head.removeChild(link);
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
