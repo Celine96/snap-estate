@@ -406,12 +406,18 @@ export default function Home() {
                       </p>
                     )}
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* 매물 정보 탭 */}
               {activeTab === 'property' && (
-                <div id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
+                <motion.div
+                  key="property"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ duration: 0.2 }}
+                  id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
                   <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
 
                   {analysisData?.investment_score && (
@@ -425,8 +431,9 @@ export default function Home() {
                   {analysisData?.zoning_info && (
                     <ZoningInfo data={analysisData.zoning_info} />
                   )}
-                </div>
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
