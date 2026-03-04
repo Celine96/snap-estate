@@ -77,6 +77,15 @@ export default function Home() {
     if (!analysisData?.id || isExportingPdf) return;
     setIsExportingPdf(true);
     try {
+      // Google Fonts에서 한글 폰트 로드
+      const link = document.createElement('link');
+      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap';
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+      
+      // 폰트 로드 대기
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       const { jsPDF } = await import('npm:jspdf@2.5.1');
       const html2canvas = (await import('npm:html2canvas@1.4.1')).default;
 
