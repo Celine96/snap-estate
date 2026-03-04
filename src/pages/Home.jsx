@@ -196,6 +196,10 @@ export default function Home() {
           >
             {/* 패널 헤더 + 탭 */}
             <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10">
+              {/* 드래그 핸들 (모바일) */}
+              <div className="flex justify-center pt-3 pb-1 md:hidden">
+                <div className="w-10 h-1 rounded-full bg-white/30" />
+              </div>
               <div className="flex items-center justify-between p-4 pb-0">
                 <div role="tablist" aria-label="분석 결과 탭" className="flex gap-2">
                   <button
