@@ -49,6 +49,7 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
     }
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    setCurrentFile(file);
     onImageSelected(file);
   };
 
@@ -58,10 +59,12 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
     const file = new File([blob], 'sample-building.jpg', { type: 'image/jpeg' });
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    setCurrentFile(file);
     onImageSelected(file);
   };
 
-  const clearImage = () => setPreviewUrl(null);
+  const clearImage = () => { setPreviewUrl(null); setCurrentFile(null); };
+  const retryAnalysis = () => { if (currentFile) onImageSelected(currentFile); };
 
   const currentStepIndex = STEP_ORDER.indexOf(analysisStep);
   const progressPercent = analysisStep ? Math.round(((currentStepIndex + 1) / STEP_ORDER.length) * 100) : 0;
