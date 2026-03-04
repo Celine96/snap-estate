@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
  * 데이터 품질 모니터링 (관리자 전용)
@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
     const confidence = { high: 0, medium: 0, low: 0, none: 0 };
 
     for (const item of analyses) {
-      // 실거래가 매칭 소스
       if (item.price_type === '최근 실거래가') {
         withRealPrice++;
         dbMatch++;
@@ -41,13 +40,11 @@ Deno.serve(async (req) => {
         aiEstimate++;
       }
 
-      // 위치 정확도
       if (item.location_accuracy === 'accurate') locationAccurate++;
       else if (item.location_accuracy === 'nearby') locationNearby++;
       else if (item.location_accuracy === 'incorrect') locationIncorrect++;
       else locationUnrated++;
 
-      // 매칭 신뢰도
       const conf = item.real_price_data?.매칭신뢰도;
       if (conf === 'high') confidence.high++;
       else if (conf === 'medium') confidence.medium++;
@@ -55,7 +52,7 @@ Deno.serve(async (req) => {
       else confidence.none++;
     }
 
-    const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
+    const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
 
     return Response.json({
       summary: {
