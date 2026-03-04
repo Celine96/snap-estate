@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, X, MapPin, Share2 } from 'lucide-react';
+import { Building2, X, MapPin, Share2, FileDown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import { base44 } from "@/api/base44Client";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
