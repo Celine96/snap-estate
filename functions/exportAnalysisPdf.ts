@@ -13,124 +13,163 @@ Deno.serve(async (req) => {
     const d = await base44.entities.BuildingAnalysis.get(id);
     if (!d) return Response.json({ error: '데이터를 찾을 수 없습니다.' }, { status: 404 });
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-          
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Noto Sans KR', sans-serif; background: #121214; color: white; padding: 20px; }
-          .container { background: #121214; width: 210mm; margin: 0 auto; padding: 20px; }
-          
-          .header { background: #1c1c1e; border-bottom: 1px solid #2c2c2e; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-          .logo { color: #4d96ff; font-size: 18px; font-weight: bold; }
-          .date { color: #9aa0a6; font-size: 10px; }
-          
-          .building-header { margin-bottom: 20px; }
-          .building-name { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
-          .address { color: #9aa0a6; font-size: 12px; margin-bottom: 12px; }
-          
-          .confidence { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-bottom: 15px; }
-          .confidence.high { background: #34d399; color: #1c1c1e; }
-          .confidence.medium { background: #fbbf24; color: #1c1c1e; }
-          .confidence.low { background: #ef4444; color: white; }
-          
-          .section { margin-bottom: 20px; }
-          .section-title { color: #9aa0a6; font-size: 11px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
-          
-          .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
-          .price-card { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px; }
-          .price-label { color: #9aa0a6; font-size: 9px; margin-bottom: 6px; }
-          .price-value { font-size: 13px; font-weight: bold; color: white; }
-          .price-value.accent { color: #4d96ff; }
-          
-          .specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-          .spec-card { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px; }
-          .spec-label { color: #9aa0a6; font-size: 9px; margin-bottom: 6px; }
-          .spec-value { font-size: 12px; font-weight: bold; color: white; }
-          
-          .content-box { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 11px; color: white; line-height: 1.6; }
-          
-          .divider { height: 1px; background: #2c2c2e; margin: 15px 0; }
-          
-          .footer { border-top: 1px solid #2c2c2e; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; color: #9aa0a6; font-size: 9px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <span class="logo">SnapEstate</span>
-            <span class="date">${new Date().toLocaleDateString('ko-KR')}</span>
-          </div>
-          
-          <div class="building-header">
-            <div class="building-name">${d.building_name || '건물 분석 결과'}</div>
-            ${d.address ? `<div class="address">${d.address}</div>` : ''}
-            ${d.confidence ? `<div class="confidence ${d.confidence === '높음' ? 'high' : d.confidence === '보통' ? 'medium' : 'low'}">신뢰도 ${d.confidence}</div>` : ''}
-          </div>
-          
-          ${d.estimated_price_sale || d.estimated_price_rent || d.estimated_price_monthly ? `
-            <div class="section">
-              <div class="section-title">시세 정보</div>
-              <div class="price-grid">
-                ${d.estimated_price_sale ? `<div class="price-card"><div class="price-label">매매가</div><div class="price-value accent">${d.estimated_price_sale}</div></div>` : ''}
-                ${d.estimated_price_rent ? `<div class="price-card"><div class="price-label">전세가</div><div class="price-value">${d.estimated_price_rent}</div></div>` : ''}
-                ${d.estimated_price_monthly ? `<div class="price-card"><div class="price-label">월세</div><div class="price-value">${d.estimated_price_monthly}</div></div>` : ''}
-              </div>
-            </div>
-          ` : ''}
-          
-          ${d.building_type || d.estimated_year || d.estimated_floors || d.estimated_area_pyeong ? `
-            <div class="section">
-              <div class="section-title">건물 스펙</div>
-              <div class="specs-grid">
-                ${d.building_type ? `<div class="spec-card"><div class="spec-label">건물 유형</div><div class="spec-value">${d.building_type}</div></div>` : ''}
-                ${d.estimated_year ? `<div class="spec-card"><div class="spec-label">건축연도</div><div class="spec-value">${d.estimated_year}년</div></div>` : ''}
-                ${d.estimated_floors ? `<div class="spec-card"><div class="spec-label">층수</div><div class="spec-value">${d.estimated_floors}층</div></div>` : ''}
-                ${d.estimated_area_pyeong ? `<div class="spec-card"><div class="spec-label">면적</div><div class="spec-value">${d.estimated_area_pyeong}평</div></div>` : ''}
-              </div>
-            </div>
-          ` : ''}
-          
-          ${d.price_trend ? `
-            <div class="section">
-              <div class="section-title">시세 동향</div>
-              <div class="content-box">${d.price_trend}</div>
-            </div>
-          ` : ''}
-          
-          ${d.analysis_summary ? `
-            <div class="section">
-              <div class="section-title">AI 분석 요약</div>
-              <div class="content-box">${d.analysis_summary}</div>
-            </div>
-          ` : ''}
-          
-          <div class="footer">
-            <span>※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.</span>
-            <span>SnapEstate</span>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210;
+    const H = 297;
 
-    const options = {
-      margin: 0,
-      filename: 'snapestate_report.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-    };
+    // 한글 폰트 임베드 (Noto Sans CJK KR)
+    const fontUrl = 'https://cdn.jsdelivr.net/npm/noto-sans-cjk@20190416/NotoSansCJKkr-Regular.ttf';
+    const fontBoldUrl = 'https://cdn.jsdelivr.net/npm/noto-sans-cjk@20190416/NotoSansCJKkr-Bold.ttf';
+    
+    const fontRes = await fetch(fontUrl);
+    const fontData = await fontRes.arrayBuffer();
+    const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontData)));
+    
+    const fontBoldRes = await fetch(fontBoldUrl);
+    const fontBoldData = await fontBoldRes.arrayBuffer();
+    const fontBoldBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBoldData)));
+    
+    doc.addFileToVFS('NotoSans.ttf', fontBase64);
+    doc.addFont('NotoSans.ttf', 'NotoSans', 'normal');
+    doc.addFileToVFS('NotoSansBold.ttf', fontBoldBase64);
+    doc.addFont('NotoSansBold.ttf', 'NotoSans', 'bold');
 
-    const canvas = await html2pdf().set(options).from(html).toPdf().output('canvas');
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new html2pdf().set(options).from(html).toPdf();
-    const pdfBytes = pdf.output('arraybuffer');
+    const setFill = (r, g, b) => doc.setFillColor(r, g, b);
+    const setDraw = (r, g, b) => doc.setDrawColor(r, g, b);
+    const setTxt = (r, g, b) => doc.setTextColor(r, g, b);
 
+    // Background
+    setFill(18, 18, 20); doc.rect(0, 0, W, H, 'F');
+
+    // Header bar
+    setFill(28, 28, 30); doc.rect(0, 0, W, 22, 'F');
+    setDraw(44, 44, 46); doc.setLineWidth(0.3); doc.line(0, 22, W, 22);
+
+    // Logo
+    setTxt(77, 150, 255); doc.setFontSize(13); doc.setFont('NotoSans', 'bold');
+    doc.text('SnapEstate', 14, 14);
+
+    // Date
+    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'normal');
+    doc.text(new Date().toLocaleDateString('ko-KR'), W - 14, 14, { align: 'right' });
+
+    let y = 32;
+
+    // Building name
+    setTxt(255, 255, 255); doc.setFontSize(16); doc.setFont('NotoSans', 'bold');
+    doc.text(d.building_name || '건물 분석 결과', 14, y); y += 7;
+
+    // Address
+    if (d.address) {
+      setTxt(154, 160, 166); doc.setFontSize(9); doc.setFont('NotoSans', 'normal');
+      const addrLines = doc.splitTextToSize(d.address, W - 28);
+      doc.text(addrLines, 14, y); y += addrLines.length * 5;
+    }
+
+    // Confidence
+    if (d.confidence) {
+      if (d.confidence === '높음') setFill(52, 211, 153);
+      else if (d.confidence === '보통') setFill(251, 191, 36);
+      else setFill(239, 68, 68);
+      doc.roundedRect(14, y + 1, 28, 6, 1, 1, 'F');
+      setTxt(18, 18, 20); doc.setFontSize(7); doc.setFont('NotoSans', 'bold');
+      doc.text('신뢰도 ' + d.confidence, 17, y + 5.5); y += 12;
+    } else { y += 5; }
+
+    // Divider
+    setDraw(44, 44, 46); doc.setLineWidth(0.3); doc.line(14, y, W - 14, y); y += 8;
+
+    // 시세 정보
+    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+    doc.text('시세 정보', 14, y); y += 5;
+
+    const prices = [
+      d.estimated_price_sale ? { label: '매매가', value: d.estimated_price_sale, accent: true } : null,
+      d.estimated_price_rent ? { label: '전세가', value: d.estimated_price_rent } : null,
+      d.estimated_price_monthly ? { label: '월세', value: d.estimated_price_monthly } : null,
+    ].filter(Boolean);
+
+    if (prices.length > 0) {
+      const colW = (W - 28) / prices.length;
+      for (let i = 0; i < prices.length; i++) {
+        const p = prices[i];
+        const x = 14 + i * colW;
+        setFill(28, 28, 30); setDraw(44, 44, 46); doc.setLineWidth(0.3);
+        doc.roundedRect(x, y, colW - 3, 20, 2, 2, 'FD');
+        setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('NotoSans', 'normal');
+        doc.text(p.label, x + 4, y + 6);
+        if (p.accent) setTxt(77, 150, 255); else setTxt(255, 255, 255);
+        doc.setFontSize(10); doc.setFont('NotoSans', 'bold');
+        doc.text(p.value, x + 4, y + 15);
+      }
+      y += 27;
+    }
+
+    // 실거래 배너
+    if (d.real_price_data && d.real_price_data['거래일']) {
+      setFill(28, 28, 30); setDraw(44, 44, 46);
+      doc.roundedRect(14, y, W - 28, 10, 2, 2, 'FD');
+      setTxt(52, 211, 153); doc.setFontSize(7.5); doc.setFont('NotoSans', 'bold');
+      doc.text('✓ ' + d.real_price_data['거래일'] + ' 실거래 신고 데이터 기준', 18, y + 6.5);
+      y += 15;
+    }
+
+    // 건물 스펙
+    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+    doc.text('건물 스펙', 14, y); y += 5;
+
+    const specs = [
+      d.building_type ? { label: '건물 유형', value: d.building_type } : null,
+      d.estimated_year ? { label: '건축연도', value: String(d.estimated_year) } : null,
+      d.estimated_floors ? { label: '층수', value: d.estimated_floors + '층' } : null,
+      d.estimated_area_pyeong ? { label: '면적', value: d.estimated_area_pyeong + '평' } : null,
+    ].filter(Boolean);
+
+    const specColW = (W - 28) / 2;
+    for (let i = 0; i < specs.length; i++) {
+      const s = specs[i];
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = 14 + col * specColW;
+      const sy = y + row * 18;
+      setFill(28, 28, 30); setDraw(44, 44, 46); doc.setLineWidth(0.3);
+      doc.roundedRect(x, sy, specColW - 3, 15, 2, 2, 'FD');
+      setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('NotoSans', 'normal');
+      doc.text(s.label, x + 4, sy + 5.5);
+      setTxt(255, 255, 255); doc.setFontSize(9); doc.setFont('NotoSans', 'bold');
+      doc.text(s.value, x + 4, sy + 11.5);
+    }
+    y += Math.ceil(specs.length / 2) * 18 + 6;
+
+    // 시세 동향
+    if (d.price_trend) {
+      setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+      doc.text('시세 동향', 14, y); y += 5;
+      setFill(28, 28, 30); setDraw(44, 44, 46);
+      doc.roundedRect(14, y, W - 28, 28, 2, 2, 'FD');
+      setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('NotoSans', 'normal');
+      const trendLines = doc.splitTextToSize(d.price_trend, W - 36);
+      doc.text(trendLines.slice(0, 4), 18, y + 7); y += 34;
+    }
+
+    // AI 분석 요약
+    if (d.analysis_summary) {
+      setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+      doc.text('AI 분석 요약', 14, y); y += 5;
+      setFill(28, 28, 30); setDraw(44, 44, 46);
+      doc.roundedRect(14, y, W - 28, 36, 2, 2, 'FD');
+      setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('NotoSans', 'normal');
+      const summaryLines = doc.splitTextToSize(d.analysis_summary, W - 36);
+      doc.text(summaryLines.slice(0, 5), 18, y + 7); y += 42;
+    }
+
+    // Footer
+    setDraw(44, 44, 46); doc.line(14, H - 14, W - 14, H - 14);
+    setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('NotoSans', 'normal');
+    doc.text('※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.', 14, H - 8);
+    doc.text('SnapEstate', W - 14, H - 8, { align: 'right' });
+
+    const pdfBytes = doc.output('arraybuffer');
     return new Response(pdfBytes, {
       status: 200,
       headers: {
