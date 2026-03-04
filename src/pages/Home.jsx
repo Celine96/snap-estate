@@ -291,11 +291,11 @@ export default function Home() {
                       {analysisData?.latitude && analysisData?.longitude && (
                         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
                           <div>
-                            <p className="text-white/40 text-xs mb-0.5">위도</p>
+                            <p className="text-white/50 text-xs mb-0.5">위도</p>
                             <p className="text-white text-sm font-mono">{analysisData.latitude.toFixed(6)}</p>
                           </div>
                           <div>
-                            <p className="text-white/40 text-xs mb-0.5">경도</p>
+                            <p className="text-white/50 text-xs mb-0.5">경도</p>
                             <p className="text-white text-sm font-mono">{analysisData.longitude.toFixed(6)}</p>
                           </div>
                         </div>
@@ -401,8 +401,8 @@ export default function Home() {
                       </div>
                     )}
                     {!showManualInput && !isAnalyzing && !analysisError && (
-                      <p className="text-white/40 text-xs text-center">
-                        부정확 선택 시 주소를 직접 입력하여 재분석합니다
+                      <p className="text-white/50 text-xs text-center">
+                       부정확 선택 시 주소를 직접 입력하여 재분석합니다
                       </p>
                     )}
                   </div>
