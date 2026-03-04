@@ -169,7 +169,7 @@ export default function Home() {
       <button
         onClick={handleBack}
         aria-label="분석 결과 닫기"
-        className="absolute top-4 left-4 z-[1000] w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-slate-700/90 transition-all"
+        className="absolute top-4 left-4 z-[1000] w-10 h-10 rounded-2xl bg-[#1C1C1E]/90 backdrop-blur-sm border border-[#2C2C2E] flex items-center justify-center text-[#9AA0A6] hover:text-white transition-all"
       >
         <X className="w-5 h-5" />
       </button>
@@ -178,14 +178,14 @@ export default function Home() {
       {!isPanelOpen && (
         <button
           onClick={() => setIsPanelOpen(true)}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] max-w-sm md:bottom-auto md:top-4 md:left-auto md:translate-x-0 md:right-4 md:w-auto px-4 py-3 rounded-2xl bg-slate-800/95 backdrop-blur-sm border border-white/20 text-white hover:bg-slate-700/95 transition-all shadow-xl flex items-center gap-3"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] max-w-sm md:bottom-auto md:top-4 md:left-auto md:translate-x-0 md:right-4 md:w-auto px-4 py-3 rounded-2xl bg-[#1C1C1E]/95 backdrop-blur-sm border border-[#2C2C2E] text-white hover:bg-[#2C2C2E]/95 transition-all shadow-xl flex items-center gap-3"
         >
           {analysisData?.image_url && (
             <img src={analysisData.image_url} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
           )}
           <div className="text-left flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{analysisData?.building_name || '분석 결과'}</p>
-            <p className="text-white/50 text-xs">자세히 보기 →</p>
+            <p className="text-[#9AA0A6] text-xs">자세히 보기 →</p>
           </div>
         </button>
       )}
