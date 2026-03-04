@@ -358,10 +358,10 @@ export default function Home() {
                           onClick={() => handleLocationAccuracy('incorrect')}
                           aria-label="위치가 부정확합니다"
                           aria-pressed={analysisData?.location_accuracy === 'incorrect'}
-                          className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
+                          className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${
                             analysisData?.location_accuracy === 'incorrect'
-                              ? 'bg-red-500/20 border-red-500/50 text-red-400'
-                              : 'border-white/10 text-white/60 hover:border-white/30 hover:text-white/80'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                              : 'border-[#2C2C2E] bg-[#121214] text-[#9AA0A6] hover:border-[#4D96FF]/30 hover:text-white'
                           }`}
                         >
                           <X className="w-5 h-5" />
@@ -371,10 +371,10 @@ export default function Home() {
                           onClick={() => handleLocationAccuracy('nearby')}
                           aria-label="위치가 근처입니다"
                           aria-pressed={analysisData?.location_accuracy === 'nearby'}
-                          className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
+                          className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${
                             analysisData?.location_accuracy === 'nearby'
-                              ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
-                              : 'border-white/10 text-white/60 hover:border-white/30 hover:text-white/80'
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                              : 'border-[#2C2C2E] bg-[#121214] text-[#9AA0A6] hover:border-[#4D96FF]/30 hover:text-white'
                           }`}
                         >
                           <MapPin className="w-5 h-5" />
@@ -384,10 +384,10 @@ export default function Home() {
                           onClick={() => handleLocationAccuracy('accurate')}
                           aria-label="위치가 정확합니다"
                           aria-pressed={analysisData?.location_accuracy === 'accurate'}
-                          className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-2 ${
+                          className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${
                             analysisData?.location_accuracy === 'accurate'
-                              ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                              : 'border-white/10 text-white/60 hover:border-white/30 hover:text-white/80'
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                              : 'border-[#2C2C2E] bg-[#121214] text-[#9AA0A6] hover:border-[#4D96FF]/30 hover:text-white'
                           }`}
                         >
                           <Building2 className="w-5 h-5" />
@@ -401,8 +401,8 @@ export default function Home() {
                       </div>
                     )}
                     {!showManualInput && !isAnalyzing && !analysisError && (
-                      <p className="text-white/50 text-xs text-center">
-                       부정확 선택 시 주소를 직접 입력하여 재분석합니다
+                      <p className="text-[#9AA0A6]/60 text-xs text-center">
+                        부정확 선택 시 주소를 직접 입력하여 재분석합니다
                       </p>
                     )}
                   </div>
@@ -414,7 +414,7 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 16 }}
                   transition={{ duration: 0.2 }}
-                  id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-6">
+                  id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="space-y-6">
                   <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
 
                   {analysisData?.investment_score && (
