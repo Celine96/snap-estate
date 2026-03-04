@@ -92,11 +92,11 @@ export default function RecentAnalyses({ analyses, onSelect }) {
                 {item.building_name || '건물 분석'}
               </p>
               {item.address && (
-                <p className="text-white/40 text-[10px] mt-0.5 truncate">
+                <p className="text-white/50 text-[10px] mt-0.5 truncate">
                   {item.address}
                 </p>
               )}
-              <p className="text-white/30 text-[10px] mt-0.5">
+              <p className="text-white/50 text-[10px] mt-0.5">
                 {formatDistanceToNow(new Date(item.created_date), { addSuffix: true, locale: ko })}
               </p>
             </div>
