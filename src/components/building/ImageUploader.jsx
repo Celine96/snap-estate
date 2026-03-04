@@ -151,7 +151,7 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
               <img
                 src={previewUrl}
                 alt="건물 미리보기"
-                className="w-full h-64 object-cover"
+                className="w-full aspect-[4/3] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               {!isAnalyzing && !analysisError && (

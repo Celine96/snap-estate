@@ -21,7 +21,20 @@ export default function RecentAnalyses({ analyses, onSelect }) {
     );
   }, [analyses, searchQuery]);
 
-  if (!analyses || analyses.length === 0) return null;
+  if (!analyses || analyses.length === 0) return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.3 }}
+      className="flex flex-col items-center gap-3 py-10 text-center"
+    >
+      <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+        <Building2 className="w-7 h-7 text-slate-500" />
+      </div>
+      <p className="text-white/50 text-sm font-medium">아직 분석 기록이 없습니다</p>
+      <p className="text-white/30 text-xs leading-relaxed max-w-xs">건물 사진을 촬영하거나 업로드하면<br/>AI가 자동으로 분석합니다</p>
+    </motion.div>
+  );
 
   const visibleItems = expanded ? filtered : filtered.slice(0, INITIAL_COUNT);
   const hasMore = filtered.length > INITIAL_COUNT;
