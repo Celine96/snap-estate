@@ -262,6 +262,18 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
+                    onClick={handleExportPdf}
+                    aria-label="PDF 다운로드"
+                    disabled={isExportingPdf}
+                    title="PDF 다운로드"
+                    className="w-9 h-9 rounded-xl hover:bg-[#1C1C1E] flex items-center justify-center text-[#9AA0A6] hover:text-white transition-all disabled:opacity-40"
+                  >
+                    {isExportingPdf
+                      ? <div className="w-4 h-4 border-2 border-[#2C2C2E] border-t-[#4D96FF] rounded-full animate-spin" />
+                      : <FileDown className="w-4 h-4" />
+                    }
+                  </button>
+                  <button
                     onClick={handleShare}
                     aria-label="분석 결과 공유"
                     className="w-9 h-9 rounded-xl hover:bg-[#1C1C1E] flex items-center justify-center text-[#9AA0A6] hover:text-white transition-all"
