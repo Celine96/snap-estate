@@ -198,10 +198,10 @@ export default function Home() {
             animate={{ y: 0, x: 0 }}
             exit={{ y: '100%', x: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="absolute bottom-0 right-0 h-[70vh] w-full md:top-0 md:bottom-auto md:h-full md:w-[480px] bg-slate-900 shadow-2xl z-[1000] overflow-y-auto rounded-t-2xl md:rounded-none"
+            className="absolute bottom-0 right-0 h-[70vh] w-full md:top-0 md:bottom-auto md:h-full md:w-[480px] bg-[#121214] shadow-2xl z-[1000] overflow-y-auto rounded-t-2xl md:rounded-none"
           >
             {/* 패널 헤더 + 탭 */}
-            <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10">
+            <div className="sticky top-0 z-10 bg-[#121214] border-b border-[#2C2C2E]">
               {/* 드래그 핸들 (모바일) */}
               <div className="flex justify-center pt-3 pb-1 md:hidden">
                 <div className="w-10 h-1 rounded-full bg-white/30" />
@@ -215,8 +215,8 @@ export default function Home() {
                     onClick={() => setActiveTab('results')}
                     className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
                       activeTab === 'results'
-                        ? 'bg-white text-slate-900'
-                        : 'text-white/60 hover:text-white/80'
+                        ? 'bg-[#1C1C1E] text-white border-t border-x border-[#2C2C2E]'
+                        : 'text-[#9AA0A6] hover:text-white'
                     }`}
                   >
                     <MapPin className="w-4 h-4 inline mr-1" aria-hidden="true" />
@@ -229,8 +229,8 @@ export default function Home() {
                     onClick={() => setActiveTab('property')}
                     className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
                       activeTab === 'property'
-                        ? 'bg-white text-slate-900'
-                        : 'text-white/60 hover:text-white/80'
+                        ? 'bg-[#1C1C1E] text-white border-t border-x border-[#2C2C2E]'
+                        : 'text-[#9AA0A6] hover:text-white'
                     }`}
                   >
                     <Building2 className="w-4 h-4 inline mr-1" aria-hidden="true" />
