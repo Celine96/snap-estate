@@ -245,7 +245,10 @@ ${addressFromGPS ? `
               건축물주용도: govItem.용도 || basicInfo.building_type,
               용도지역: '',
               거래유형: '',
-              매칭점수: 0
+              매칭점수: 0,
+              매칭신뢰도: govItem.매칭신뢰도 || null,
+              매칭점수_정규화: govItem.매칭점수_정규화 || null,
+              매칭요인: govItem.매칭요인 || [],
             };
             priceType = "국토교통부 실거래가";
           }
@@ -447,7 +450,10 @@ ${realPriceData ? `
               건축물주용도: govItem.용도 || item.building_type,
               용도지역: '',
               거래유형: '',
-              매칭점수: 0
+              매칭점수: 0,
+              매칭신뢰도: govItem.매칭신뢰도 || null,
+              매칭점수_정규화: govItem.매칭점수_정규화 || null,
+              매칭요인: govItem.매칭요인 || [],
             };
             priceType = '국토교통부 실거래가';
           }
@@ -530,7 +536,10 @@ ${realPriceData ? `
               건축물주용도: govItem.용도 || analysisData.building_type,
               용도지역: '',
               거래유형: '',
-              매칭점수: 0
+              매칭점수: 0,
+              매칭신뢰도: govItem.매칭신뢰도 || null,
+              매칭점수_정규화: govItem.매칭점수_정규화 || null,
+              매칭요인: govItem.매칭요인 || [],
             };
             priceType = "국토교통부 실거래가";
           }

@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Building2, MapPin, Calendar, Layers, Ruler, 
-  TrendingUp, Home, Banknote, Copy, Star, TreePine, Shield
+import {
+  Building2, MapPin, Calendar, Layers, Ruler,
+  TrendingUp, Home, Banknote, Copy, Star, TreePine, Shield,
+  Database, Globe, Bot
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import EditableField from './EditableField';
@@ -88,6 +89,24 @@ export default function AnalysisResult({ data, onUpdate }) {
     '낮음': 'bg-red-500/20 text-red-400 border-red-500/20',
   };
 
+  // 매칭 신뢰도 배지
+  const matchConfidence = data.real_price_data?.매칭신뢰도;
+  const matchConfidenceConfig = {
+    high: { label: '정확', className: 'bg-green-500/20 text-green-400 border-green-500/20' },
+    medium: { label: '유사', className: 'bg-amber-500/20 text-amber-400 border-amber-500/20' },
+    low: { label: '참고', className: 'bg-red-500/20 text-red-400 border-red-500/20' },
+  };
+
+  // 데이터 출처 아이콘
+  const priceSourceConfig = {
+    '최근 실거래가': { icon: Database, color: 'text-emerald-400', label: 'DB' },
+    '국토교통부 실거래가': { icon: Globe, color: 'text-blue-400', label: '국토부' },
+    'AI 추정가': { icon: Bot, color: 'text-purple-400', label: 'AI' },
+  };
+  const priceSource = priceSourceConfig[data.price_type] || null;
+
+  const matchFactors = data.real_price_data?.매칭요인;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -141,12 +160,25 @@ export default function AnalysisResult({ data, onUpdate }) {
               <Banknote className="w-4 h-4 text-blue-400" />
               시세 정보
             </h3>
-            {data.price_type && (
-              <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/20 border text-xs">
-                {data.price_type}
-              </Badge>
-            )}
+            <div className="flex items-center gap-1.5">
+              {matchConfidence && matchConfidenceConfig[matchConfidence] && (
+                <Badge className={`${matchConfidenceConfig[matchConfidence].className} border text-xs`}>
+                  {matchConfidenceConfig[matchConfidence].label}
+                </Badge>
+              )}
+              {priceSource && (
+                <Badge className="bg-white/5 text-white/60 border-white/10 border text-xs flex items-center gap-1">
+                  <priceSource.icon className={`w-3 h-3 ${priceSource.color}`} />
+                  {priceSource.label}
+                </Badge>
+              )}
+            </div>
           </div>
+          {matchFactors?.length > 0 && (
+            <p className="text-white/30 text-[10px] px-1">
+              {matchFactors.join(' · ')}
+            </p>
+          )}
           {data.real_price_data?.거래일 ? (
             <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
               <Calendar className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
