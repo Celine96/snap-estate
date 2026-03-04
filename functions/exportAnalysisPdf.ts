@@ -29,22 +29,22 @@ Deno.serve(async (req) => {
     setDraw(44, 44, 46); doc.setLineWidth(0.3); doc.line(0, 22, W, 22);
 
     // Logo
-    setTxt(77, 150, 255); doc.setFontSize(13); doc.setFont('NotoSans', 'bold');
+    setTxt(77, 150, 255); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
     doc.text('SnapEstate', 14, 14);
 
     // Date
-    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'normal');
+    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
     doc.text(new Date().toLocaleDateString('ko-KR'), W - 14, 14, { align: 'right' });
 
     let y = 32;
 
     // Building name
-    setTxt(255, 255, 255); doc.setFontSize(16); doc.setFont('NotoSans', 'bold');
+    setTxt(255, 255, 255); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
     doc.text(d.building_name || '건물 분석 결과', 14, y); y += 7;
 
     // Address
     if (d.address) {
-      setTxt(154, 160, 166); doc.setFontSize(9); doc.setFont('NotoSans', 'normal');
+      setTxt(154, 160, 166); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
       const addrLines = doc.splitTextToSize(d.address, W - 28);
       doc.text(addrLines, 14, y); y += addrLines.length * 5;
     }
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       else if (d.confidence === '보통') setFill(251, 191, 36);
       else setFill(239, 68, 68);
       doc.roundedRect(14, y + 1, 28, 6, 1, 1, 'F');
-      setTxt(18, 18, 20); doc.setFontSize(7); doc.setFont('NotoSans', 'bold');
+      setTxt(18, 18, 20); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
       doc.text('신뢰도 ' + d.confidence, 17, y + 5.5); y += 12;
     } else { y += 5; }
 
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     setDraw(44, 44, 46); doc.setLineWidth(0.3); doc.line(14, y, W - 14, y); y += 8;
 
     // 시세 정보
-    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
     doc.text('시세 정보', 14, y); y += 5;
 
     const prices = [
@@ -79,10 +79,10 @@ Deno.serve(async (req) => {
         const x = 14 + i * colW;
         setFill(28, 28, 30); setDraw(44, 44, 46); doc.setLineWidth(0.3);
         doc.roundedRect(x, y, colW - 3, 20, 2, 2, 'FD');
-        setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('NotoSans', 'normal');
+        setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
         doc.text(p.label, x + 4, y + 6);
         if (p.accent) setTxt(77, 150, 255); else setTxt(255, 255, 255);
-        doc.setFontSize(10); doc.setFont('NotoSans', 'bold');
+        doc.setFontSize(10); doc.setFont('helvetica', 'bold');
         doc.text(p.value, x + 4, y + 15);
       }
       y += 27;
@@ -92,13 +92,13 @@ Deno.serve(async (req) => {
     if (d.real_price_data && d.real_price_data['거래일']) {
       setFill(28, 28, 30); setDraw(44, 44, 46);
       doc.roundedRect(14, y, W - 28, 10, 2, 2, 'FD');
-      setTxt(52, 211, 153); doc.setFontSize(7.5); doc.setFont('NotoSans', 'bold');
+      setTxt(52, 211, 153); doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
       doc.text('✓ ' + d.real_price_data['거래일'] + ' 실거래 신고 데이터 기준', 18, y + 6.5);
       y += 15;
     }
 
     // 건물 스펙
-    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+    setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
     doc.text('건물 스펙', 14, y); y += 5;
 
     const specs = [
@@ -117,38 +117,38 @@ Deno.serve(async (req) => {
       const sy = y + row * 18;
       setFill(28, 28, 30); setDraw(44, 44, 46); doc.setLineWidth(0.3);
       doc.roundedRect(x, sy, specColW - 3, 15, 2, 2, 'FD');
-      setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('NotoSans', 'normal');
+      setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
       doc.text(s.label, x + 4, sy + 5.5);
-      setTxt(255, 255, 255); doc.setFontSize(9); doc.setFont('NotoSans', 'bold');
+      setTxt(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
       doc.text(s.value, x + 4, sy + 11.5);
     }
     y += Math.ceil(specs.length / 2) * 18 + 6;
 
     // 시세 동향
     if (d.price_trend) {
-      setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+      setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
       doc.text('시세 동향', 14, y); y += 5;
       setFill(28, 28, 30); setDraw(44, 44, 46);
       doc.roundedRect(14, y, W - 28, 28, 2, 2, 'FD');
-      setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('NotoSans', 'normal');
+      setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
       const trendLines = doc.splitTextToSize(d.price_trend, W - 36);
       doc.text(trendLines.slice(0, 4), 18, y + 7); y += 34;
     }
 
     // AI 분석 요약
     if (d.analysis_summary) {
-      setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('NotoSans', 'bold');
+      setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
       doc.text('AI 분석 요약', 14, y); y += 5;
       setFill(28, 28, 30); setDraw(44, 44, 46);
       doc.roundedRect(14, y, W - 28, 36, 2, 2, 'FD');
-      setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('NotoSans', 'normal');
+      setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
       const summaryLines = doc.splitTextToSize(d.analysis_summary, W - 36);
       doc.text(summaryLines.slice(0, 5), 18, y + 7); y += 42;
     }
 
     // Footer
     setDraw(44, 44, 46); doc.line(14, H - 14, W - 14, H - 14);
-    setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('NotoSans', 'normal');
+    setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
     doc.text('※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.', 14, H - 8);
     doc.text('SnapEstate', W - 14, H - 8, { align: 'right' });
 
