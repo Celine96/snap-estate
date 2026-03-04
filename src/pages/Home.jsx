@@ -100,8 +100,8 @@ export default function Home() {
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
               SnapEstate
             </h1>
-            <p className="text-white/40 text-sm sm:text-base max-w-md mx-auto">
-              건물 사진 한 장으로 스펙과 시세를 AI가 분석합니다
+            <p className="text-white/50 text-base sm:text-lg max-w-lg mx-auto leading-relaxed" style={{ lineHeight: '1.7' }}>
+              AI로 부동산 매물 사진에서<br className="sm:hidden" /> 위치·시세·스펙을 자동 추출합니다
             </p>
           </motion.div>
 
