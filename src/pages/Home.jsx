@@ -259,7 +259,7 @@ export default function Home() {
             <div className="p-4 space-y-4">
               <AnimatePresence mode="wait">
               {/* 위치 정보 탭 */}
-              {activeTab === 'results' && (
+              {activeTab === 'results' ? (
                 <motion.div
                   key="results"
                   initial={{ opacity: 0, x: -16 }}
