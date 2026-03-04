@@ -77,26 +77,14 @@ export default function Home() {
     if (!analysisData?.id || isExportingPdf) return;
     setIsExportingPdf(true);
     try {
-      // Google Fonts에서 한글 폰트 로드
-      const link = document.createElement('link');
-      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap';
-      link.rel = 'stylesheet';
-      document.head.appendChild(link);
-      
-      // 폰트 로드 대기
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const { jsPDF } = await import('npm:jspdf@2.5.1');
-      const html2canvas = (await import('npm:html2canvas@1.4.1')).default;
+      const html2pdf = (await import('npm:html2pdf.js@0.10.1')).default;
 
       const element = document.createElement('div');
-      element.style.position = 'absolute';
-      element.style.left = '-9999px';
-      element.style.width = '210mm';
       element.style.padding = '20mm';
       element.style.background = '#121214';
       element.style.color = '#fff';
-      element.style.fontFamily = "'Noto Sans KR', sans-serif";
+      element.style.fontFamily = "Arial, sans-serif";
+      element.style.lineHeight = '1.6';
       
       element.innerHTML = `
         <div style="max-width: 100%;">
@@ -138,23 +126,17 @@ export default function Home() {
       `;
       
       document.body.appendChild(element);
-      const canvas = await html2canvas(element, { 
-        scale: 2, 
-        backgroundColor: '#121214', 
-        logging: false,
-        useCORS: true,
-        allowTaint: true
-      });
+      
+      const options = {
+        margin: 0,
+        filename: `snapestate_${analysisData.building_name || 'report'}.pdf`,
+        image: { type: 'png', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'p', unit: 'mm', format: 'a4' }
+      };
+      
+      await html2pdf().set(options).from(element).save();
       document.body.removeChild(element);
-      document.head.removeChild(link);
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      
-      pdf.save(`snapestate_${analysisData.building_name || 'report'}.pdf`);
       toast.success('PDF가 다운로드되었습니다');
     } catch (e) {
       toast.error('PDF 생성에 실패했습니다');
