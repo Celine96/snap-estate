@@ -17,23 +17,6 @@ Deno.serve(async (req) => {
     const W = 210;
     const H = 297;
 
-    // 한글 폰트 임베드 (Noto Sans CJK KR)
-    const fontUrl = 'https://cdn.jsdelivr.net/npm/noto-sans-cjk@20190416/NotoSansCJKkr-Regular.ttf';
-    const fontBoldUrl = 'https://cdn.jsdelivr.net/npm/noto-sans-cjk@20190416/NotoSansCJKkr-Bold.ttf';
-    
-    const fontRes = await fetch(fontUrl);
-    const fontData = await fontRes.arrayBuffer();
-    const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontData)));
-    
-    const fontBoldRes = await fetch(fontBoldUrl);
-    const fontBoldData = await fontBoldRes.arrayBuffer();
-    const fontBoldBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBoldData)));
-    
-    doc.addFileToVFS('NotoSans.ttf', fontBase64);
-    doc.addFont('NotoSans.ttf', 'NotoSans', 'normal');
-    doc.addFileToVFS('NotoSansBold.ttf', fontBoldBase64);
-    doc.addFont('NotoSansBold.ttf', 'NotoSans', 'bold');
-
     const setFill = (r, g, b) => doc.setFillColor(r, g, b);
     const setDraw = (r, g, b) => doc.setDrawColor(r, g, b);
     const setTxt = (r, g, b) => doc.setTextColor(r, g, b);
