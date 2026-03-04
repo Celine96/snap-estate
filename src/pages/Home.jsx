@@ -289,7 +289,7 @@ export default function Home() {
                       </div>
 
                       {analysisData?.latitude && analysisData?.longitude && (
-                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#2C2C2E]">
                           <div>
                             <p className="text-white/50 text-xs mb-0.5">위도</p>
                             <p className="text-white text-sm font-mono">{analysisData.latitude.toFixed(6)}</p>
