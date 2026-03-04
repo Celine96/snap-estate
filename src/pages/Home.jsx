@@ -75,7 +75,7 @@ export default function Home() {
   // 업로드 화면
   if (!showResult) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      <div className="min-h-screen bg-[#121214] relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
