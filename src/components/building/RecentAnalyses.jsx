@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Clock, ChevronDown, ChevronUp, Search, Building2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -78,7 +78,7 @@ export default function RecentAnalyses({ analyses, onSelect }) {
             className="group text-left rounded-xl overflow-hidden bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all"
           >
             {item.image_url && (
-              <div className="relative h-24 overflow-hidden">
+              <div className="relative h-32 overflow-hidden">
                 <img
                   src={item.image_url}
                   alt={item.building_name}
