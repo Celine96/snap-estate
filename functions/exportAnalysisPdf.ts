@@ -155,31 +155,31 @@ Deno.serve(async (req) => {
     y += Math.ceil(specs.length / 2) * 18 + 6;
 
     // 시세 동향
-    if (d.price_trend) {
+    if (encoded.price_trend) {
       setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-      doc.text('시세 동향', 14, y); y += 5;
+      doc.text(await encodeText('시세 동향'), 14, y); y += 5;
       setFill(28, 28, 30); setDraw(44, 44, 46);
       doc.roundedRect(14, y, W - 28, 28, 2, 2, 'FD');
       setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      const trendLines = doc.splitTextToSize(d.price_trend, W - 36);
+      const trendLines = doc.splitTextToSize(encoded.price_trend, W - 36);
       doc.text(trendLines.slice(0, 4), 18, y + 7); y += 34;
     }
 
     // AI 분석 요약
-    if (d.analysis_summary) {
+    if (encoded.analysis_summary) {
       setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-      doc.text('AI 분석 요약', 14, y); y += 5;
+      doc.text(await encodeText('AI 분석 요약'), 14, y); y += 5;
       setFill(28, 28, 30); setDraw(44, 44, 46);
       doc.roundedRect(14, y, W - 28, 36, 2, 2, 'FD');
       setTxt(255, 255, 255); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      const summaryLines = doc.splitTextToSize(d.analysis_summary, W - 36);
+      const summaryLines = doc.splitTextToSize(encoded.analysis_summary, W - 36);
       doc.text(summaryLines.slice(0, 5), 18, y + 7);
     }
 
     // Footer
     setDraw(44, 44, 46); doc.line(14, H - 14, W - 14, H - 14);
     setTxt(154, 160, 166); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-    doc.text('※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.', 14, H - 8);
+    doc.text(await encodeText('※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.'), 14, H - 8);
     doc.text('SnapEstate', W - 14, H - 8, { align: 'right' });
 
     const pdfBytes = doc.output('arraybuffer');
