@@ -241,14 +241,14 @@ export default function Home() {
                   <button
                     onClick={handleShare}
                     aria-label="분석 결과 공유"
-                    className="w-11 h-11 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                    className="w-9 h-9 rounded-xl hover:bg-[#1C1C1E] flex items-center justify-center text-[#9AA0A6] hover:text-white transition-all"
                   >
                     <Share2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setIsPanelOpen(false)}
                     aria-label="패널 닫기"
-                    className="w-11 h-11 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                    className="w-9 h-9 rounded-xl hover:bg-[#1C1C1E] flex items-center justify-center text-[#9AA0A6] hover:text-white transition-all"
                   >
                     <X className="w-5 h-5" />
                   </button>
