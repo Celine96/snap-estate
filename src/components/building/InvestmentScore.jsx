@@ -53,11 +53,12 @@ export default function InvestmentScore({ data }) {
           <div>
             <p className="text-white/40 text-xs mb-1">종합 투자점수</p>
             <div className="flex items-baseline gap-2">
-              <span className={`text-4xl font-bold ${getScoreColor(data.overall)}`}>
-                {data.overall}
+              <span className={`text-4xl font-bold ${getScoreColor(data.overall ?? 0)}`}>
+                {data.overall ?? '-'}
               </span>
               <span className="text-white/40 text-lg">/ 100</span>
             </div>
+            <p className="text-white/30 text-xs mt-1">75+ 우수 · 50~74 보통 · 50 미만 주의</p>
           </div>
           <div className="w-20 h-20 rounded-full border-4 border-white/10 flex items-center justify-center relative">
             <motion.div

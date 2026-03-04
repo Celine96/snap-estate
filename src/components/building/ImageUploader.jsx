@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CloudUpload, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STEP_MESSAGES = {

@@ -55,7 +55,7 @@ export default function EditableField({ value, onSave, className = "" }) {
       <span className="border-b border-dashed border-white/20">{value || '정보 없음'}</span>
       <button
         onClick={() => setIsEditing(true)}
-        className="opacity-40 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-blue-400/50 outline-none"
+        className="opacity-60 md:opacity-40 md:group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-blue-400/50 outline-none"
       >
         <Pencil className="w-3 h-3 text-white/60" />
       </button>
