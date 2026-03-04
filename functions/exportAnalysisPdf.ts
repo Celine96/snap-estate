@@ -79,23 +79,23 @@ Deno.serve(async (req) => {
 
     // Building name
     setTxt(255, 255, 255); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text(d.building_name || '건물 분석 결과', 14, y); y += 7;
+    doc.text(encoded.building_name, 14, y); y += 7;
 
     // Address
-    if (d.address) {
+    if (encoded.address) {
       setTxt(154, 160, 166); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-      const addrLines = doc.splitTextToSize(d.address, W - 28);
+      const addrLines = doc.splitTextToSize(encoded.address, W - 28);
       doc.text(addrLines, 14, y); y += addrLines.length * 5;
     }
 
     // Confidence
-    if (d.confidence) {
+    if (encoded.confidence) {
       if (d.confidence === '높음') setFill(52, 211, 153);
       else if (d.confidence === '보통') setFill(251, 191, 36);
       else setFill(239, 68, 68);
       doc.roundedRect(14, y + 1, 28, 6, 1, 1, 'F');
       setTxt(18, 18, 20); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-      doc.text('신뢰도 ' + d.confidence, 17, y + 5.5); y += 12;
+      doc.text('신뢰도 ' + encoded.confidence, 17, y + 5.5); y += 12;
     } else { y += 5; }
 
     // Divider
