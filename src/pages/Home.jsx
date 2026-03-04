@@ -84,23 +84,23 @@ export default function Home() {
           }}
         />
 
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/5 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#4D96FF]/[0.03] rounded-full blur-[100px]" />
 
-        <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 sm:py-12">
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-10 sm:py-14">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-10"
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-slate-300" />
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-[#9AA0A6]" />
               </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">
               SnapEstate
             </h1>
-            <p className="text-white/50 text-base sm:text-lg max-w-lg mx-auto leading-relaxed" style={{ lineHeight: '1.7' }}>
+            <p className="text-[#9AA0A6] text-base sm:text-lg max-w-lg mx-auto leading-relaxed" style={{ lineHeight: '1.8' }}>
               AI로 부동산 매물 사진에서<br className="sm:hidden" /> 위치·시세·스펙을 자동 추출합니다
             </p>
           </motion.div>
@@ -118,16 +118,16 @@ export default function Home() {
               analysisError={analysisError}
             />
 
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-2">
               {['건물 유형 분석', '추정 시세', '주변 환경', '투자 가치'].map((text, i) => (
                 <motion.div
                   key={text}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + (i * 0.05) }}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700"
+                  className="px-3 py-1.5 rounded-lg bg-[#1C1C1E] border border-[#2C2C2E]"
                 >
-                  <span className="text-slate-300 text-xs font-medium">{text}</span>
+                  <span className="text-[#9AA0A6] text-xs">{text}</span>
                 </motion.div>
               ))}
             </div>
