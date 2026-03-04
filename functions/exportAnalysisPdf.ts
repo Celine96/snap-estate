@@ -129,13 +129,13 @@ Deno.serve(async (req) => {
 
     // 건물 스펙
     setTxt(154, 160, 166); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-    doc.text('건물 스펙', 14, y); y += 5;
+    doc.text(await encodeText('건물 스펙'), 14, y); y += 5;
 
     const specs = [
-      d.building_type ? { label: '건물 유형', value: d.building_type } : null,
-      d.estimated_year ? { label: '건축연도', value: String(d.estimated_year) } : null,
-      d.estimated_floors ? { label: '층수', value: d.estimated_floors + '층' } : null,
-      d.estimated_area_pyeong ? { label: '면적', value: d.estimated_area_pyeong + '평' } : null,
+      encoded.building_type ? { label: await encodeText('건물 유형'), value: encoded.building_type } : null,
+      encoded.estimated_year ? { label: await encodeText('건축연도'), value: String(encoded.estimated_year) } : null,
+      encoded.estimated_floors ? { label: await encodeText('층수'), value: encoded.estimated_floors + await encodeText('층') } : null,
+      encoded.estimated_area_pyeong ? { label: await encodeText('면적'), value: encoded.estimated_area_pyeong + await encodeText('평') } : null,
     ].filter(Boolean);
 
     const specColW = (W - 28) / 2;
