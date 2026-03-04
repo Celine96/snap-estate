@@ -38,9 +38,12 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
   };
 
   const handleFile = (file) => {
-    if (!file.type.startsWith('image/')) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('이미지 파일만 업로드할 수 있습니다', { description: 'JPG, PNG, WEBP 형식을 지원합니다' });
+      return;
+    }
     if (file.size > 20 * 1024 * 1024) {
-      alert('파일 크기가 너무 큽니다. 20MB 이하의 이미지를 업로드해주세요.');
+      toast.error('파일 크기가 너무 큽니다', { description: '20MB 이하의 이미지를 업로드해주세요' });
       return;
     }
     const url = URL.createObjectURL(file);
