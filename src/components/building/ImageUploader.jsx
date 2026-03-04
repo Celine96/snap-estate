@@ -21,6 +21,7 @@ const SAMPLE_IMAGE_URL = 'https://images.unsplash.com/photo-1486325212027-8081e4
 export default function ImageUploader({ onImageSelected, isAnalyzing, analysisStep, analysisError }) {
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [currentFile, setCurrentFile] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleDrag = (e) => {
