@@ -277,13 +277,13 @@ export default function Home() {
                     )}
                     <div className="p-4 space-y-3">
                       <div>
-                        <h3 className="text-white font-semibold text-base mb-1">
+                        <h3 className="text-white font-bold text-base mb-1">
                           {analysisData?.building_name || '건물 분석'}
                         </h3>
                         {analysisData?.address && (
-                          <div className="flex items-start gap-2 text-white/60">
-                            <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-                            <span className="text-sm">{analysisData.address}</span>
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-3.5 h-3.5 text-[#9AA0A6] shrink-0 mt-0.5" />
+                            <span className="text-sm text-[#9AA0A6]">{analysisData.address}</span>
                           </div>
                         )}
                       </div>
@@ -291,25 +291,27 @@ export default function Home() {
                       {analysisData?.latitude && analysisData?.longitude && (
                         <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#2C2C2E]">
                           <div>
-                            <p className="text-white/50 text-xs mb-0.5">위도</p>
-                            <p className="text-white text-sm font-mono">{analysisData.latitude.toFixed(6)}</p>
+                            <p className="text-[#9AA0A6] text-xs mb-0.5">위도</p>
+                            <p className="text-white text-sm font-mono tabular-nums">{analysisData.latitude.toFixed(6)}</p>
                           </div>
                           <div>
-                            <p className="text-white/50 text-xs mb-0.5">경도</p>
-                            <p className="text-white text-sm font-mono">{analysisData.longitude.toFixed(6)}</p>
+                            <p className="text-[#9AA0A6] text-xs mb-0.5">경도</p>
+                            <p className="text-white text-sm font-mono tabular-nums">{analysisData.longitude.toFixed(6)}</p>
                           </div>
                         </div>
                       )}
 
                       {analysisData?.confidence && (
-                        <Badge className={`
-                          ${analysisData.confidence === '높음' ? 'bg-green-500/20 text-green-400 border-green-500/20' : ''}
-                          ${analysisData.confidence === '보통' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20' : ''}
-                          ${analysisData.confidence === '낮음' ? 'bg-red-500/20 text-red-400 border-red-500/20' : ''}
-                          border text-xs
-                        `}>
-                          신뢰도: {analysisData.confidence}
-                        </Badge>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121214] border border-[#2C2C2E]">
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            analysisData.confidence === '높음' ? 'bg-emerald-400' :
+                            analysisData.confidence === '보통' ? 'bg-amber-400' : 'bg-red-400'
+                          }`} />
+                          <span className={`text-xs ${
+                            analysisData.confidence === '높음' ? 'text-emerald-400' :
+                            analysisData.confidence === '보통' ? 'text-amber-400' : 'text-red-400'
+                          }`}>신뢰도 {analysisData.confidence}</span>
+                        </div>
                       )}
                     </div>
                   </div>
