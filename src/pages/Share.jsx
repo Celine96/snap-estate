@@ -3,6 +3,7 @@ import { Building2, MapPin, TrendingUp, Home, Calendar, Layers, ExternalLink } f
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 
 export default function Share() {
   const [data, setData] = useState(null);
