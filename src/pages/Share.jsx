@@ -14,7 +14,11 @@ export default function Share() {
     const id = params.get('id');
     if (!id) { setError('잘못된 링크입니다.'); setLoading(false); return; }
 
-    base44.functions.invoke('getSharedAnalysis', { id })
+    fetch(`/api/functions/getSharedAnalysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).then(r => r.json())
       .then(res => {
         if (res.data?.data) setData(res.data.data);
         else setError('분석 정보를 찾을 수 없습니다.');
