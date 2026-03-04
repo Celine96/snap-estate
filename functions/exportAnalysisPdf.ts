@@ -13,9 +13,15 @@ Deno.serve(async (req) => {
     const d = await base44.entities.BuildingAnalysis.get(id);
     if (!d) return Response.json({ error: '데이터를 찾을 수 없습니다.' }, { status: 404 });
 
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: false });
     const W = 210;
     const H = 297;
+
+    // UTF-8 인코딩 설정
+    doc.setProperties({
+      title: d.building_name || '건물 분석 결과',
+      author: 'SnapEstate',
+    });
 
     const setFill = (r, g, b) => doc.setFillColor(r, g, b);
     const setDraw = (r, g, b) => doc.setDrawColor(r, g, b);
