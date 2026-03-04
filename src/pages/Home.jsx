@@ -407,10 +407,7 @@ export default function Home() {
                     )}
                   </div>
                 </motion.div>
-              )}
-
-              {/* 매물 정보 탭 */}
-              {activeTab === 'property' && (
+              ) : (
                 <motion.div
                   key="property"
                   initial={{ opacity: 0, x: 16 }}
