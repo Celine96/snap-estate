@@ -382,7 +382,7 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 16 }}
                   transition={{ duration: 0.2 }}
-                  id="panel-property" role="tabpanel" aria-labelledby="tab-property" className="space-y-6">
+                  id="panel-property" role="tabpanel" aria-labelledby="tab-property" tabIndex={0} className="space-y-6">
                   <AnalysisResult data={analysisData} onUpdate={handleUpdateAnalysis} />
 
                   {analysisData?.investment_score && (
