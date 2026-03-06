@@ -486,6 +486,8 @@ ${addressFromGPS ? `
     setAnalysisError(null);
     setShowManualInput(false);
     setManualAddress('');
+    setIsAnalyzing(false);
+    setAnalysisStep(null);
   };
 
   return {
