@@ -193,6 +193,7 @@ export default function Home() {
           <TileLayer
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            aria-label="지도 배경"
           />
           <Marker position={[analysisData.latitude, analysisData.longitude]}>
             <Popup>
