@@ -524,6 +524,7 @@ ${addressFromGPS ? `
     setShowManualInput,
     setActiveTab,
     handleImageSelected,
+    handleCancelAnalysis,
     handleSelectRecent,
     handleUpdateAnalysis,
     handleManualAddressSubmit,
