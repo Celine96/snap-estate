@@ -1,37 +1,119 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-// ─── 주소 파싱 ────────────────────────────────────────────────────────────────
-function parseAddress(address) {
-  if (!address) return {};
-  const districtMatch = address.match(/([\uAC00-\uD7A3]+구)/);
-  const dongMatch = address.match(/([\uAC00-\uD7A3]+동)/);
-  const roadKeyMatch = address.match(/([\uAC00-\uD7A3]+(?:로|길))/);
-  const jibunMatch = address.match(/(\d+(?:-\d+)?)\s*$/);
-  const isRoad = /로\s|\s로|길\s|\s길/.test(address) || roadKeyMatch != null;
-
-  return {
-    district: districtMatch ? districtMatch[1] : null,
-    dong: dongMatch ? dongMatch[1] : null,
-    roadKey: roadKeyMatch ? roadKeyMatch[1] : null,
-    jibun: jibunMatch ? jibunMatch[1] : null,
-    isRoad,
-    raw: address,
-  };
+// ─── 주소 파싱 & 스코어링 (searchCommercialPrice와 동일 로직) ────────────────
+function extractDong(address) {
+  return address.match(/([가-힣]+동\d*가?|[가-힣]+가\d*)/)?.[1] || null;
 }
-
-function scoreRecord(row, parsed) {
-  let score = 0;
-  const rowText = JSON.stringify(row);
-
-  if (parsed.dong && rowText.includes(parsed.dong)) score += 50;
-  if (parsed.jibun) {
-    const mainJibun = parsed.jibun.split('-')[0];
-    if (rowText.includes(parsed.jibun)) score += 100;
-    else if (rowText.includes(mainJibun)) score += 50;
+function extractDistrict(address) {
+  return address.match(/([가-힣]+구)/)?.[1] || null;
+}
+function isRoadAddress(address) {
+  return /[가-힣0-9]+(로|길)\s*\d/.test(address);
+}
+function extractJibun(address) {
+  if (!address) return null;
+  const withBunji = address.match(/(\d+(?:-\d+)?)\s*번지/);
+  if (withBunji) return withBunji[1];
+  return address.match(/(?:^|\s)(\d+(?:-\d+)?)(?:\s*$)/)?.[1] || null;
+}
+function extractJibunSafe(address) {
+  if (!address || isRoadAddress(address)) return null;
+  return extractJibun(address);
+}
+function normalizeBunji(str) {
+  return str ? str.replace(/번지\s*$/, '').trim() : str;
+}
+function jibunMatches(a, b) { return !!(a && b && a.split('-')[0] === b.split('-')[0]); }
+function jibunExactMatches(a, b) { return !!(a && b && a === b); }
+function getJibunCandidates(row) {
+  const candidates = [];
+  if (row.지번) {
+    const j = extractJibun(normalizeBunji(row.지번)) || extractJibun(row.지번);
+    if (j) candidates.push(j);
   }
-  if (parsed.roadKey && rowText.includes(parsed.roadKey)) score += 40;
+  if (row.대지위치_표제부 && !isRoadAddress(row.대지위치_표제부)) {
+    const j = extractJibun(normalizeBunji(row.대지위치_표제부)) || extractJibun(row.대지위치_표제부);
+    if (j && !candidates.includes(j)) candidates.push(j);
+  }
+  return candidates;
+}
+function extractRoadKey(address) {
+  const m = address.match(/([가-힣]+(?:\d+)?(?:로|길)(?:\d+길)?)\s*([\d-]+)/);
+  return m ? `${m[1]} ${m[2]}`.trim() : null;
+}
+function parseAddress(address) {
+  if (!address) return { district: null, dong: null, inputJibun: null, isRoad: false, roadKey: null, hasJibunOrRoad: false };
+  const district = extractDistrict(address);
+  const dong = extractDong(address);
+  const inputJibun = extractJibunSafe(address);
+  const isRoad = isRoadAddress(address);
+  const roadKey = isRoad ? extractRoadKey(address) : null;
+  return { district, dong, inputJibun, isRoad, roadKey, hasJibunOrRoad: !!(inputJibun || roadKey) };
+}
+function roadProximityScore(inputRoadKey, rowRoad) {
+  const im = inputRoadKey.match(/^(.+?)\s+(\d+)/);
+  const rm = rowRoad.match(/(.+?(?:로|길)(?:\d+길)?)\s*(\d+)/);
+  if (!im || !rm || im[1] !== rm[1]) return null;
+  const diff = Math.abs(parseInt(im[2]) - parseInt(rm[2]));
+  if (diff === 0) return null;
+  if (diff <= 10) return { score: 60, factor: `도로명 근접 매칭 (${diff}번 차이)` };
+  return null;
+}
+const MAX_SCORE = 205;
+function scoreRecord(row, parsed, input = {}) {
+  let score = 0;
+  let matchType = 'none';
+  const matchFactors = [];
 
-  return score;
+  if (parsed.roadKey) {
+    const rowRoad = (row.도로명 || row.도로명대지위치_표제부 || '').replace(/\s*\([^)]+\)/, '').trim();
+    if (rowRoad.includes(parsed.roadKey)) {
+      score += 120; matchType = 'road_exact'; matchFactors.push('도로명 정확 매칭');
+    } else {
+      const prox = roadProximityScore(parsed.roadKey, rowRoad);
+      if (prox) { score += prox.score; matchType = 'road_nearby'; matchFactors.push(prox.factor); }
+    }
+  }
+  if (parsed.inputJibun && matchType === 'none') {
+    const inputHasSub = parsed.inputJibun.includes('-');
+    for (const candidate of getJibunCandidates(row)) {
+      if (jibunExactMatches(parsed.inputJibun, candidate)) {
+        score += 120; matchType = 'jibun_exact'; matchFactors.push('지번 정확 매칭'); break;
+      } else if (!inputHasSub && jibunMatches(parsed.inputJibun, candidate)) {
+        score += 80; matchType = 'jibun_main'; matchFactors.push('지번 본번 매칭'); break;
+      }
+    }
+  }
+  const dongMatched = parsed.dong && (row.시군구 || row.법정동 || '').includes(parsed.dong);
+  if (dongMatched) {
+    if (!parsed.hasJibunOrRoad && matchType === 'none') {
+      score += 50; matchType = 'dong_only'; matchFactors.push('동 매칭 (핵심)');
+    } else { score += 20; matchFactors.push('동 매칭'); }
+  }
+  if (matchType === 'none') return { score: 0, matchType: 'none', confidence: 'none', normalizedScore: 0 };
+
+  if (input.buildingName?.length > 1) {
+    const name = row.건물명 || '';
+    if (name && (name.includes(input.buildingName) || input.buildingName.includes(name))) {
+      score += 20; matchFactors.push('건물명 매칭');
+    }
+  }
+  if (row.매칭단계 && row.매칭단계 !== '매칭실패') { score += 10; }
+  if (input.estimatedYear && row.건축년도) {
+    const diff = Math.abs(input.estimatedYear - parseInt(row.건축년도));
+    score += Math.max(0, 10 - diff);
+  }
+  const area = row.전용연면적 ? parseFloat(row.전용연면적) : row.전용면적 ? parseFloat(row.전용면적) : null;
+  if (input.estimatedAreaSqm && area > 0) {
+    const ratio = Math.abs(input.estimatedAreaSqm - area) / Math.max(input.estimatedAreaSqm, area);
+    if (ratio <= 0.05) score += 15;
+    else if (ratio <= 0.10) score += 10;
+    else if (ratio <= 0.25) score += 5;
+  }
+
+  const normalizedScore = Math.round((score / MAX_SCORE) * 100);
+  const confidence = normalizedScore >= 70 ? 'high' : normalizedScore >= 45 ? 'medium' : normalizedScore >= 20 ? 'low' : 'none';
+  return { score, matchType, confidence, normalizedScore, matchFactors };
 }
 
 // ─── DB에서 실거래가 조회 ─────────────────────────────────────────────────────
@@ -68,11 +150,16 @@ async function findRealPriceFromDB(base44, address, estimatedYear, estimatedArea
 
   if (records.length === 0) return null;
 
-  const scored = records.map(row => ({ ...row, _score: scoreRecord(row, parsed) }));
+  const estimatedAreaSqm = estimatedArea ? estimatedArea * 3.305785 : null;
+  const scored = records.map(row => {
+    const result = scoreRecord(row, parsed, { estimatedYear: estimatedYear ? parseInt(estimatedYear) : null, estimatedAreaSqm });
+    return { ...row, _score: result.score, _confidence: result.confidence, _normalizedScore: result.normalizedScore };
+  });
   scored.sort((a, b) => b._score - a._score);
 
   const top = scored[0];
-  if (top._score < 50) return null;
+  const minScore = parsed.hasJibunOrRoad ? 80 : 50;
+  if (top._score < minScore) return null;
 
   const rawPrice = (top.거래금액 || '0').toString().replace(/,/g, '').replace(/[^0-9]/g, '');
   const yyyymm = top.계약년월 || '';
@@ -93,7 +180,7 @@ async function findRealPriceFromDB(base44, address, estimatedYear, estimatedArea
     용도지역: top.용도지역,
     거래유형: top.거래유형,
     매칭점수: top._score,
-    매칭신뢰도: top._score >= 150 ? 'high' : top._score >= 80 ? 'medium' : 'low',
+    매칭신뢰도: top._confidence || 'low',
     데이터출처: 'DB',
   };
 }
