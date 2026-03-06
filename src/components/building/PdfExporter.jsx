@@ -137,43 +137,32 @@ export async function exportToPdf(analysisData) {
 
         <!-- ① 헤더 (다크 + Summary Bar) -->
         <div style="background:#0F172A; padding:0;">
-          <!-- 브랜드 바 -->
-          <div style="padding:14px 32px 10px; border-bottom:1px solid rgba(255,255,255,0.08);">
-            <table style="width:100%; border-collapse:collapse;">
-              <tr>
-                <td style="vertical-align:middle;">
-                  <span style="color:#FFFFFF; font-size:16px; font-weight:800; letter-spacing:-0.3px;">SnapEstate</span>
-                  <span style="color:#475569; font-size:9.5px; margin-left:8px;">AI 건물 분석 보고서</span>
-                </td>
-                <td style="text-align:right; vertical-align:middle;">
-                  <span style="color:#64748B; font-size:9px;">${dateStr}</span>
-                </td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Summary Bar (핵심 지표 3개) -->
-          <table style="width:100%; border-collapse:collapse; padding:0;">
+          <!-- 브랜드 + Summary Bar (한 줄) -->
+          <table style="width:100%; border-collapse:collapse;">
             <tr>
-              <td style="width:33.3%; padding:14px 20px 14px 32px; border-right:1px solid rgba(255,255,255,0.06); vertical-align:top;">
-                <div style="color:#64748B; font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:5px;">매매 추정가</div>
-                <div style="color:#FFFFFF; font-size:17px; font-weight:800; line-height:1.1;">${d.estimated_price_sale || '정보 없음'}</div>
-                ${d.price_type ? `<div style="color:#3B82F6; font-size:8px; margin-top:4px;">${d.price_type}</div>` : ''}
+              <td style="padding:10px 16px 10px 28px; border-right:1px solid rgba(255,255,255,0.06); vertical-align:middle; width:22%;">
+                <div style="color:#FFFFFF; font-size:14px; font-weight:800;">SnapEstate</div>
+                <div style="color:#475569; font-size:8px; margin-top:1px;">${dateStr}</div>
               </td>
-              <td style="width:33.3%; padding:14px 20px; border-right:1px solid rgba(255,255,255,0.06); vertical-align:top;">
-                <div style="color:#64748B; font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:5px;">전세가율</div>
-                <div style="color:${jeonseRatio !== null ? (jeonseRatio >= 70 ? '#F87171' : jeonseRatio >= 50 ? '#34D399' : '#FCD34D') : '#475569'}; font-size:17px; font-weight:800; line-height:1.1;">
+              <td style="padding:10px 16px; border-right:1px solid rgba(255,255,255,0.06); vertical-align:middle; width:26%;">
+                <div style="color:#64748B; font-size:7.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px;">매매 추정가</div>
+                <div style="color:#FFFFFF; font-size:14px; font-weight:800;">${d.estimated_price_sale || '—'}</div>
+                ${d.price_type ? `<div style="color:#3B82F6; font-size:7.5px; margin-top:2px;">${d.price_type}</div>` : ''}
+              </td>
+              <td style="padding:10px 16px; border-right:1px solid rgba(255,255,255,0.06); vertical-align:middle; width:26%;">
+                <div style="color:#64748B; font-size:7.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px;">전세가율</div>
+                <div style="color:${jeonseRatio !== null ? (jeonseRatio >= 70 ? '#F87171' : jeonseRatio >= 50 ? '#34D399' : '#FCD34D') : '#475569'}; font-size:14px; font-weight:800;">
                   ${jeonseRatio !== null ? jeonseRatio + '%' : '—'}
                 </div>
-                ${jeonseRatio !== null ? `<div style="color:#475569; font-size:8px; margin-top:4px;">${jeonseRatio >= 70 ? '고위험 구간' : jeonseRatio >= 50 ? '안정 구간' : '주의 구간'}</div>` : ''}
+                ${jeonseRatio !== null ? `<div style="color:#475569; font-size:7.5px; margin-top:2px;">${jeonseRatio >= 70 ? '고위험' : jeonseRatio >= 50 ? '안정' : '주의'}</div>` : ''}
               </td>
-              <td style="width:33.3%; padding:14px 32px 14px 20px; vertical-align:top;">
-                <div style="color:#64748B; font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:5px;">분석 신뢰도</div>
-                <div style="color:#FFFFFF; font-size:17px; font-weight:800; line-height:1.1;">${d.confidence || '—'}</div>
-                <div style="margin-top:5px;">
-                  <span style="display:inline-block; width:6px; height:6px; background:${confidenceDot}; border-radius:50%; vertical-align:middle; margin-right:4px;"></span>
-                  <span style="color:#475569; font-size:8px; vertical-align:middle;">${d.confidence === '높음' ? 'AI 고신뢰' : d.confidence === '보통' ? '참고 수준' : '검증 필요'}</span>
+              <td style="padding:10px 28px 10px 16px; vertical-align:middle; width:26%;">
+                <div style="color:#64748B; font-size:7.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px;">분석 신뢰도</div>
+                <div style="color:#FFFFFF; font-size:14px; font-weight:800;">
+                  <span style="display:inline-block; width:5px; height:5px; background:${confidenceDot}; border-radius:50%; vertical-align:middle; margin-right:4px;"></span>
+                  ${d.confidence || '—'}
                 </div>
+                <div style="color:#475569; font-size:7.5px; margin-top:2px;">${d.confidence === '높음' ? 'AI 고신뢰' : d.confidence === '보통' ? '참고 수준' : '검증 필요'}</div>
               </td>
             </tr>
           </table>
