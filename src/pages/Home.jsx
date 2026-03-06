@@ -233,6 +233,8 @@ export default function Home() {
             exit={{ y: '100%', x: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="absolute bottom-0 right-0 h-[70vh] w-full md:top-0 md:bottom-auto md:h-full md:w-[480px] bg-[#121214] shadow-2xl z-[1000] overflow-y-auto rounded-t-2xl md:rounded-none"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
             {/* 패널 헤더 + 탭 */}
             <div className="sticky top-0 z-10 bg-[#121214] border-b border-[#2C2C2E]">
