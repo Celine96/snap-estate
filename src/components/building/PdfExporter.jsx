@@ -103,9 +103,9 @@ export async function exportToPdf(analysisData) {
               <div style="width:3px; height:16px; background:#8B5CF6; border-radius:2px;"></div>
               <p style="color:#0F172A; font-size:13px; font-weight:700; margin:0;">건물 스펙</p>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">
               ${specs.map(s => `
-                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px;">
+                <div style="width:calc(50% - 5px); box-sizing:border-box; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px;">
                   <span style="font-size:20px; flex-shrink:0;">${s.icon}</span>
                   <div>
                     <p style="color:#94A3B8; font-size:10px; margin:0 0 3px 0;">${s.label}</p>
