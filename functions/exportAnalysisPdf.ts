@@ -167,7 +167,8 @@ Deno.serve(async (req) => {
         const sy  = top + row * (sh + 4);
         page.drawRectangle({ x: sx, y: tb(sy + sh), width: scw - 4, height: sh, color: SURF, borderColor: BORD, borderWidth: 0.5 });
         page.drawText(s.label, { x: sx + 8, y: tb(sy + 16), font, size: 7.5, color: GRAY });
-        page.drawText(s.value, { x: sx + 8, y: tb(sy + 32), font, size: 10,  color: WHITE });
+        const clampedSpec = clampText(s.value, scw - 20, 10, font);
+        page.drawText(clampedSpec, { x: sx + 8, y: tb(sy + 32), font, size: 10, color: WHITE });
       }
       top += rows * (sh + 4) + 16;
     }
