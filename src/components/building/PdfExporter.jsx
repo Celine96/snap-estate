@@ -115,11 +115,11 @@ export async function exportToPdf(analysisData) {
 
     // 투자 지표 행 (3열)
     const investCardsHtml = investItems.map(item => `
-      <td style="padding:5px;">
-        <div style="background:${item.bg}; border:1px solid ${item.bg === '#F9FAFB' ? '#E5E7EB' : item.bg}; border-radius:8px; padding:14px 12px; text-align:center;">
-          <div style="color:#94A3B8; font-size:9px; font-weight:600; margin-bottom:6px; text-transform:uppercase;">${item.label}</div>
-          <div style="color:${item.color}; font-size:16px; font-weight:800;">${item.value}</div>
-          ${item.sub ? `<div style="color:${item.color}; font-size:9px; margin-top:3px; opacity:0.8;">${item.sub}</div>` : ''}
+      <td style="padding:4px;">
+        <div style="background:${item.bg}; border:1px solid ${item.bg === '#F9FAFB' ? '#E5E7EB' : item.bg}; border-radius:8px; padding:10px 12px; text-align:center;">
+          <div style="color:#94A3B8; font-size:8.5px; font-weight:600; margin-bottom:4px; text-transform:uppercase;">${item.label}</div>
+          <div style="color:${item.color}; font-size:13px; font-weight:800;">${item.value}</div>
+          ${item.sub ? `<div style="color:${item.color}; font-size:8.5px; margin-top:2px; opacity:0.8;">${item.sub}</div>` : ''}
         </div>
       </td>
     `).join('');
