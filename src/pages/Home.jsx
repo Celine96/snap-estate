@@ -87,26 +87,10 @@ export default function Home() {
   };
 
   const handleExportPdf = async () => {
-    if (!analysisData?.id || isExportingPdf) return;
+    if (!analysisData || isExportingPdf) return;
     setIsExportingPdf(true);
-    try {
-      const response = await base44.functions.invoke('exportAnalysisPdf', { id: analysisData.id });
-      const pdfBytes = new Uint8Array(response.data);
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `snapestate_${analysisData.building_name || 'report'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('PDF가 다운로드되었습니다');
-    } catch (e) {
-      toast.error('PDF 생성에 실패했습니다');
-    } finally {
-      setIsExportingPdf(false);
-    }
+    await exportToPdf(analysisData);
+    setIsExportingPdf(false);
   };
 
   // 업로드 화면
