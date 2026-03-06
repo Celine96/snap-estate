@@ -261,7 +261,7 @@ export async function exportToPdf(analysisData) {
               ${d.analysis_summary ? `
               <td style="vertical-align:top; padding-left:${d.price_trend ? '6px' : '0'}; width:${d.price_trend ? '50%' : '100%'};">
                 ${sectionHeader('AI 분석 요약', '#D97706')}
-                <div style="padding-left:12px; margin-top:8px;">
+                <div style="padding-left:16px; margin-top:8px;">
                   <div style="background:#FFFBEB; border:1px solid #FDE68A; border-left:3px solid #D97706; border-radius:7px; padding:10px 12px;">
                     <div style="color:#451A03; font-size:9.5px; line-height:1.7;">${d.analysis_summary}</div>
                   </div>
