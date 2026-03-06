@@ -39,6 +39,7 @@ export function useAnalysis() {
       );
     },
     enabled: !!user,
+    refetchOnWindowFocus: true,
   });
 
   const handleImageSelected = async (file) => {
