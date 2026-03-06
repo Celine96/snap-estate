@@ -327,15 +327,9 @@ export async function exportToPdf(analysisData) {
 // 섹션 헤더 헬퍼
 function sectionHeader(text, color) {
   return `
-    <table style="border-collapse:collapse; width:100%;">
-      <tr>
-        <td style="vertical-align:middle; width:4px; padding-right:10px;">
-          <div style="width:4px; height:16px; background:${color}; border-radius:2px;"></div>
-        </td>
-        <td style="vertical-align:middle;">
-          <span style="font-size:12.5px; font-weight:700; color:#0F172A; letter-spacing:-0.2px;">${text}</span>
-        </td>
-      </tr>
-    </table>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div style="width:4px; height:16px; background:${color}; border-radius:2px; flex-shrink:0;"></div>
+      <span style="font-size:12.5px; font-weight:700; color:#0F172A; letter-spacing:-0.2px;">${text}</span>
+    </div>
   `;
 }
