@@ -276,7 +276,7 @@ export async function exportToPdf(analysisData) {
           ${d.building_features && d.building_features.length > 0 ? `
           <div style="margin-bottom:8px;">
             ${sectionHeader('건물 특징', '#4F46E5')}
-            <div style="padding-left:12px; margin-top:8px;">
+            <div style="padding-left:16px; margin-top:8px;">
               ${d.building_features.map(f => `
                 <span style="display:inline-block; background:#EEF2FF; color:#3730A3; border:1px solid #C7D2FE; padding:3px 9px; border-radius:20px; font-size:9.5px; font-weight:500; margin:0 4px 5px 0;">${f}</span>
               `).join('')}
