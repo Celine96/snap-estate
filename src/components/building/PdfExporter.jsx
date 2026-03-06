@@ -130,7 +130,9 @@ export async function exportToPdf(analysisData) {
         color:#1A1A1A;
         font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
         width:595px;
+        height:842px;
         box-sizing:border-box;
+        overflow:hidden;
       ">
 
         <!-- ① 헤더 (다크 + Summary Bar) -->
