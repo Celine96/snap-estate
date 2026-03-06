@@ -61,6 +61,17 @@ export default function Home() {
     touchStartY.current = null;
   };
 
+  // Share 페이지에서 돌아올 때 이력 새로고침
+  React.useEffect(() => {
+    const onFocus = () => {
+      // useAnalysis의 refetch 대신 query invalidation을 위해 아무 상태나 건드리지 않고
+      // recentAnalyses는 useAnalysis 내에서 window focus 이벤트로 refetch할 수 없으므로
+      // 여기서는 아무것도 하지 않음 - tanstack query는 windowFocusRefetch 기본 활성화
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
   const handleShare = async () => {
     if (!analysisData?.id) return;
     const shareUrl = `${window.location.origin}${createPageUrl('Share')}?id=${analysisData.id}`;
