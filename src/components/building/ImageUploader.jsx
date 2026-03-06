@@ -100,7 +100,7 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])}
+                onChange={(e) => { if (e.target.files[0]) { handleFile(e.target.files[0]); e.target.value = ''; } }}
               />
               <div className="flex flex-col items-center gap-5">
                 <motion.div
