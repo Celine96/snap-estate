@@ -16,7 +16,7 @@ const STEP_MESSAGES = {
 const STEP_ORDER = ['uploading', 'extracting_location', 'reverse_geocoding', 'analyzing_building', 'querying_price', 'detailed_analysis', 'saving'];
 const SAMPLE_IMAGE_URL = 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80';
 
-export default function ImageUploader({ onImageSelected, isAnalyzing, analysisStep, analysisError }) {
+export default function ImageUploader({ onImageSelected, isAnalyzing, analysisStep, analysisError, onCancel }) {
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [currentFile, setCurrentFile] = useState(null);
