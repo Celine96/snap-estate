@@ -192,6 +192,8 @@ ${addressFromGPS ? `
         quickEstimatesPromise,
       ]);
 
+      if (abortRef.cancelled) return;
+
       const basicInfo = basicInfoResult;
       if (!basicInfo) {
         throw new Error('건물 기본 정보 분석에 실패했습니다. 다시 시도해주세요.');
