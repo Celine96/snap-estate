@@ -547,96 +547,95 @@ Deno.serve(async (req) => {
     }
 
     const url = `https://apis.data.go.kr/1613000/${serviceName}/${apiEndpoint}`;
-    const items = [];
-
     const now = new Date();
     const endYear = now.getFullYear();
     const endMonth = now.getMonth() + 1;
     const MONTHS_TO_SEARCH = 24;
+    const BATCH_SIZE = 5; // 5개월씩 병렬 요청
 
-    console.log(`[국토부API] ${url} | 시군구=${sigunguCode} | 유형=${buildingType} | 최근 ${MONTHS_TO_SEARCH}개월`);
+    console.log(`[국토부API] ${url} | 시군구=${sigunguCode} | 유형=${buildingType} | 최근 ${MONTHS_TO_SEARCH}개월 (배치 ${BATCH_SIZE})`);
 
+    // 월 리스트 생성
+    const monthList = [];
     for (let i = 0; i < MONTHS_TO_SEARCH; i++) {
-      let y = endYear;
-      let m = endMonth - i;
+      let y = endYear, m = endMonth - i;
       while (m <= 0) { m += 12; y--; }
-      const dealYmd = `${y}${String(m).padStart(2, '0')}`;
+      monthList.push(`${y}${String(m).padStart(2, '0')}`);
+    }
 
-      const params = new URLSearchParams({
-        serviceKey: apiKey,
-        LAWD_CD: sigunguCode,
-        DEAL_YMD: dealYmd,
-        numOfRows: '100',
-        pageNo: '1'
-      });
+    const parseXmlItems = (xmlText, dealYmd) => {
+      const results = [];
+      for (const match of xmlText.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+        const itemXml = match[1];
+        const getTagValue = (tag) => {
+          const regex = new RegExp(`<${tag}><!\\[CDATA\\[([^\\]]+)\\]\\]><\\/${tag}>|<${tag}>([^<]*)<\\/${tag}>`);
+          const m = itemXml.match(regex);
+          return m ? (m[1] || m[2] || '').trim() : '';
+        };
+        let itemData = {};
+        if (buildingType === '아파트') {
+          itemData = {
+            건물명: getTagValue('aptNm') || getTagValue('아파트'),
+            거래금액: getTagValue('dealAmount') || getTagValue('거래금액'),
+            건축연도: getTagValue('buildYear') || getTagValue('건축년도'),
+            층: getTagValue('floor') || getTagValue('층'),
+            전용면적: getTagValue('excluUseAr') || getTagValue('excluUseArea') || getTagValue('전용면적'),
+            거래일: `${getTagValue('dealYear') || getTagValue('년')}-${getTagValue('dealMonth') || getTagValue('월')}-${getTagValue('dealDay') || getTagValue('일')}`,
+            법정동: getTagValue('umdNm') || getTagValue('법정동'),
+            지번: getTagValue('jibun') || getTagValue('지번'),
+            용도: '아파트'
+          };
+        } else if (buildingType === '오피스텔') {
+          itemData = {
+            건물명: getTagValue('offiNm') || getTagValue('단지'),
+            거래금액: getTagValue('dealAmount') || getTagValue('거래금액'),
+            건축연도: getTagValue('buildYear') || getTagValue('건축년도'),
+            층: getTagValue('floor') || getTagValue('층'),
+            전용면적: getTagValue('excluUseAr') || getTagValue('excluUseArea') || getTagValue('전용면적'),
+            거래일: `${getTagValue('dealYear') || getTagValue('년')}-${getTagValue('dealMonth') || getTagValue('월')}-${getTagValue('dealDay') || getTagValue('일')}`,
+            법정동: getTagValue('umdNm') || getTagValue('법정동'),
+            지번: getTagValue('jibun') || getTagValue('지번'),
+            용도: '오피스텔'
+          };
+        } else {
+          itemData = {
+            건물명: '',
+            거래금액: getTagValue('dealAmount'),
+            건축연도: getTagValue('buildYear'),
+            층: getTagValue('floor'),
+            전용면적: getTagValue('buildingAr'),
+            거래일: `${getTagValue('dealYear')}-${getTagValue('dealMonth')}-${getTagValue('dealDay')}`,
+            법정동: getTagValue('umdNm'),
+            지번: getTagValue('jibun'),
+            건물유형: getTagValue('buildingType'),
+            건물주용도: getTagValue('buildingUse'),
+            용도: getTagValue('buildingUse') || buildingType
+          };
+        }
+        if (itemData.거래금액) results.push(itemData);
+      }
+      return results;
+    };
 
+    const fetchMonth = async (dealYmd) => {
+      const params = new URLSearchParams({ serviceKey: apiKey, LAWD_CD: sigunguCode, DEAL_YMD: dealYmd, numOfRows: '100', pageNo: '1' });
       try {
         const response = await fetchWithRetry(`${url}?${params}`);
-        const xmlText = await response.text();
-
-        const itemMatches = xmlText.matchAll(/<item>([\s\S]*?)<\/item>/g);
-
-        for (const match of itemMatches) {
-          const itemXml = match[1];
-
-          const getTagValue = (tag) => {
-            const regex = new RegExp(`<${tag}><!\\[CDATA\\[([^\\]]+)\\]\\]><\\/${tag}>|<${tag}>([^<]*)<\\/${tag}>`);
-            const m = itemXml.match(regex);
-            return m ? (m[1] || m[2] || '').trim() : '';
-          };
-
-          let itemData = {};
-
-          if (buildingType === '아파트') {
-            itemData = {
-              건물명: getTagValue('aptNm') || getTagValue('아파트'),
-              거래금액: getTagValue('dealAmount') || getTagValue('거래금액'),
-              건축연도: getTagValue('buildYear') || getTagValue('건축년도'),
-              층: getTagValue('floor') || getTagValue('층'),
-              전용면적: getTagValue('excluUseAr') || getTagValue('excluUseArea') || getTagValue('전용면적'),
-              거래일: `${getTagValue('dealYear') || getTagValue('년')}-${getTagValue('dealMonth') || getTagValue('월')}-${getTagValue('dealDay') || getTagValue('일')}`,
-              법정동: getTagValue('umdNm') || getTagValue('법정동'),
-              지번: getTagValue('jibun') || getTagValue('지번'),
-              용도: '아파트'
-            };
-          } else if (buildingType === '오피스텔') {
-            itemData = {
-              건물명: getTagValue('offiNm') || getTagValue('단지'),
-              거래금액: getTagValue('dealAmount') || getTagValue('거래금액'),
-              건축연도: getTagValue('buildYear') || getTagValue('건축년도'),
-              층: getTagValue('floor') || getTagValue('층'),
-              전용면적: getTagValue('excluUseAr') || getTagValue('excluUseArea') || getTagValue('전용면적'),
-              거래일: `${getTagValue('dealYear') || getTagValue('년')}-${getTagValue('dealMonth') || getTagValue('월')}-${getTagValue('dealDay') || getTagValue('일')}`,
-              법정동: getTagValue('umdNm') || getTagValue('법정동'),
-              지번: getTagValue('jibun') || getTagValue('지번'),
-              용도: '오피스텔'
-            };
-          } else {
-            itemData = {
-              건물명: '',
-              거래금액: getTagValue('dealAmount'),
-              건축연도: getTagValue('buildYear'),
-              층: getTagValue('floor'),
-              전용면적: getTagValue('buildingAr'),
-              거래일: `${getTagValue('dealYear')}-${getTagValue('dealMonth')}-${getTagValue('dealDay')}`,
-              법정동: getTagValue('umdNm'),
-              지번: getTagValue('jibun'),
-              건물유형: getTagValue('buildingType'),
-              건물주용도: getTagValue('buildingUse'),
-              용도: getTagValue('buildingUse') || buildingType
-            };
-          }
-
-          if (itemData.거래금액) {
-            items.push(itemData);
-          }
-        }
-      } catch (error) {
-        console.log(`${dealYmd} 조회 실패:`, error.message);
+        return parseXmlItems(await response.text(), dealYmd);
+      } catch (e) {
+        console.log(`${dealYmd} 조회 실패:`, e.message);
+        return [];
       }
+    };
 
+    // 배치 병렬 처리
+    const items = [];
+    for (let i = 0; i < monthList.length; i += BATCH_SIZE) {
+      const batch = monthList.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(fetchMonth));
+      for (const r of batchResults) items.push(...r);
       if (items.length >= 200) {
-        console.log(`[국토부API] ${items.length}건 수집 완료, 조기 종료 (${i + 1}개월 조회)`);
+        console.log(`[국토부API] ${items.length}건 수집, 조기 종료 (${i + BATCH_SIZE}개월 조회)`);
         break;
       }
     }
