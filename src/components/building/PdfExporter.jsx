@@ -335,18 +335,16 @@ export async function exportToPdf(analysisData) {
 }
 
 // 섹션 헤더 헬퍼
-// bar(4px) + gap(8px) = 12px indent → content container도 동일하게 padding-left:12px 적용
+// 그리드 규칙:
+//   bar  = 4px wide, 절대 좌측
+//   gap  = 12px (bar와 타이틀 사이)
+//   title start = 16px (bar 4px + gap 12px)
+//   content left edge = 동일하게 16px  ← 모든 섹션에서 통일
 function sectionHeader(text, color) {
   return `
-    <table style="border-collapse:collapse; width:auto; margin:0; padding:0;">
-      <tr>
-        <td style="width:4px; padding:0; vertical-align:middle;">
-          <div style="width:4px; height:16px; background:${color}; border-radius:2px;"></div>
-        </td>
-        <td style="padding:0 0 0 8px; vertical-align:middle;">
-          <span style="font-size:12.5px; font-weight:700; color:#0F172A; letter-spacing:-0.2px; white-space:nowrap;">${text}</span>
-        </td>
-      </tr>
-    </table>
+    <div style="position:relative; padding-left:16px; margin:0;">
+      <div style="position:absolute; left:0; top:50%; transform:translateY(-50%); width:4px; height:16px; background:${color}; border-radius:2px;"></div>
+      <span style="font-size:12.5px; font-weight:700; color:#0F172A; letter-spacing:-0.2px; white-space:nowrap; line-height:1;">${text}</span>
+    </div>
   `;
 }
