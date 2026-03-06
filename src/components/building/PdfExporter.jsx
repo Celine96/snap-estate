@@ -325,11 +325,18 @@ export async function exportToPdf(analysisData) {
 }
 
 // 섹션 헤더 헬퍼
+// bar(4px) + gap(8px) = 12px indent → content container도 동일하게 padding-left:12px 적용
 function sectionHeader(text, color) {
   return `
-    <div style="display:flex; align-items:center; gap:8px;">
-      <div style="width:4px; height:16px; background:${color}; border-radius:2px; flex-shrink:0;"></div>
-      <span style="font-size:12.5px; font-weight:700; color:#0F172A; letter-spacing:-0.2px;">${text}</span>
-    </div>
+    <table style="border-collapse:collapse; width:auto; margin:0; padding:0;">
+      <tr>
+        <td style="width:4px; padding:0; vertical-align:middle;">
+          <div style="width:4px; height:16px; background:${color}; border-radius:2px;"></div>
+        </td>
+        <td style="padding:0 0 0 8px; vertical-align:middle;">
+          <span style="font-size:12.5px; font-weight:700; color:#0F172A; letter-spacing:-0.2px; white-space:nowrap;">${text}</span>
+        </td>
+      </tr>
+    </table>
   `;
 }
