@@ -251,7 +251,7 @@ export async function exportToPdf(analysisData) {
               ${d.price_trend ? `
               <td style="vertical-align:top; padding-right:${d.analysis_summary ? '6px' : '0'}; width:${d.analysis_summary ? '50%' : '100%'};">
                 ${sectionHeader('시세 동향', '#059669')}
-                <div style="padding-left:12px; margin-top:8px;">
+                <div style="padding-left:16px; margin-top:8px;">
                   <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-left:3px solid #059669; border-radius:7px; padding:10px 12px;">
                     <div style="color:#064E3B; font-size:9.5px; line-height:1.7;">${d.price_trend}</div>
                   </div>
