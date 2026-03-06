@@ -91,8 +91,9 @@ Deno.serve(async (req) => {
 
     let top = 82;
 
-    // Building name
-    page.drawText(d.building_name || '건물 분석 결과', { x: pad, y: tb(top + 14), font, size: 16, color: WHITE });
+    // Building name (clamp to single line)
+    const buildingNameText = clampText(d.building_name || '건물 분석 결과', cw, 16, font);
+    page.drawText(buildingNameText, { x: pad, y: tb(top + 14), font, size: 16, color: WHITE });
     top += 22;
 
     // Address
