@@ -214,7 +214,7 @@ export async function exportToPdf(analysisData) {
               ${investItems.length > 0 ? `
               <td style="vertical-align:top; padding-left:${prices.length > 0 ? '8px' : '0'}; width:${prices.length > 0 ? '45%' : '100%'};">
                 ${sectionHeader('투자 지표', '#7C3AED')}
-                <div style="padding-left:12px; margin-top:8px;">
+                <div style="padding-left:16px; margin-top:8px;">
                   <table style="width:100%; border-collapse:collapse;">
                     <tr>${investCardsHtml}</tr>
                   </table>
