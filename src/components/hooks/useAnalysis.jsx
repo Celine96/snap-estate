@@ -43,7 +43,15 @@ export function useAnalysis() {
     refetchOnWindowFocus: true,
   });
 
+  const handleCancelAnalysis = () => {
+    abortRef.cancelled = true;
+    setIsAnalyzing(false);
+    setAnalysisStep(null);
+    setAnalysisError(null);
+  };
+
   const handleImageSelected = async (file) => {
+    abortRef.cancelled = false;
     setIsAnalyzing(true);
     setAnalysisError(null);
     setAnalysisStep('uploading');
