@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Building2, MapPin, TrendingUp, Home, Calendar, Layers, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Share() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const id = new URLSearchParams(window.location.search).get('id');
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    if (!id) { setError('잘못된 링크입니다.'); setLoading(false); return; }
+  const { data: fetchedData, isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ['shared-analysis', id],
+    queryFn: async () => {
+      if (!id) throw new Error('잘못된 링크입니다.');
+      const res = await base44.functions.invoke('getSharedAnalysis', { id });
+      if (!res.data?.data) throw new Error('분석 정보를 찾을 수 없습니다.');
+      return res.data.data;
+    },
+    enabled: !!id,
+    retry: false,
+  });
 
-    base44.functions.invoke('getSharedAnalysis', { id })
-      .then(res => {
-        if (res.data?.data) setData(res.data.data);
-        else setError('분석 정보를 찾을 수 없습니다.');
-      })
-      .catch(() => setError('데이터를 불러오는 중 오류가 발생했습니다.'))
-      .finally(() => setLoading(false));
-  }, []);
+  const data = fetchedData || null;
+  const error = !id ? '잘못된 링크입니다.' : fetchError?.message || null;
 
   const infoItems = data ? [
     data.building_type && { label: '건물 유형', value: data.building_type, icon: Building2 },
