@@ -51,6 +51,16 @@ export default function Home() {
 
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
+  // 모바일 스와이프로 패널 닫기
+  const touchStartY = useRef(null);
+  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+  const handleTouchEnd = (e) => {
+    if (touchStartY.current === null) return;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (dy > 80) setIsPanelOpen(false);
+    touchStartY.current = null;
+  };
+
   const handleShare = async () => {
     if (!analysisData?.id) return;
     const shareUrl = `${window.location.origin}${createPageUrl('Share')}?id=${analysisData.id}`;
