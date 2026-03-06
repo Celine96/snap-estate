@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, X, MapPin, Share2, FileDown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
