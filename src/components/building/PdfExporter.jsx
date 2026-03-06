@@ -63,10 +63,10 @@ export async function exportToPdf(analysisData) {
 
     // 시세 카드 (table 기반)
     const priceCardsHtml = prices.map(p => `
-      <td style="padding:5px; width:${Math.floor(100/prices.length)}%;">
-        <div style="background:${p.bg}; border:1.5px solid ${p.border}; border-radius:10px; padding:16px 14px;">
-          <div style="color:${p.color}; font-size:10px; font-weight:600; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">${p.label}</div>
-          <div style="color:${p.color}; font-size:15px; font-weight:800; line-height:1.2;">${p.value}</div>
+      <td style="padding:4px; width:${Math.floor(100/prices.length)}%;">
+        <div style="background:${p.bg}; border:1.5px solid ${p.border}; border-radius:8px; padding:10px 12px;">
+          <div style="color:${p.color}; font-size:9px; font-weight:600; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px;">${p.label}</div>
+          <div style="color:${p.color}; font-size:13px; font-weight:800; line-height:1.2;">${p.value}</div>
         </div>
       </td>
     `).join('');
