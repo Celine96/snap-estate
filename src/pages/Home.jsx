@@ -291,9 +291,10 @@ export default function Home() {
                   <button
                     onClick={handleShare}
                     aria-label="분석 결과 공유"
-                    className="w-9 h-9 rounded-xl hover:bg-[#1C1C1E] flex items-center justify-center text-[#9AA0A6] hover:text-white transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4D96FF]/10 border border-[#4D96FF]/30 text-[#4D96FF] hover:bg-[#4D96FF]/20 transition-all text-xs font-medium"
                   >
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-3.5 h-3.5" />
+                    공유
                   </button>
                   <button
                     onClick={() => setIsPanelOpen(false)}
