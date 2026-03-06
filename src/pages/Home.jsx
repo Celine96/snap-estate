@@ -311,7 +311,7 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.2 }}
-                  id="panel-results" role="tabpanel" aria-labelledby="tab-results" className="space-y-4">
+                  id="panel-results" role="tabpanel" aria-labelledby="tab-results" tabIndex={0} className="space-y-4">
                   <div className="bg-[#1C1C1E] rounded-2xl border border-[#2C2C2E] overflow-hidden">
                     {analysisData?.image_url && (
                       <img
