@@ -22,6 +22,7 @@ export function useAnalysis() {
   const [activeTab, setActiveTab] = useState('results');
   const [manualAddress, setManualAddress] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const abortRef = useState(() => ({ cancelled: false }))[0];
 
   const { data: user } = useQuery({
     queryKey: ['user'],
