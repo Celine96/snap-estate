@@ -176,37 +176,24 @@ export async function exportToPdf(analysisData) {
         </div>
         ` : ''}
 
-        <!-- ③ 건물 이미지 + 건물 ID 블록 -->
-        ${d.image_url ? `
-        <div style="overflow:hidden; height:175px; position:relative;">
-          <img src="${d.image_url}" style="width:100%; height:175px; object-fit:cover; display:block;" crossorigin="anonymous" />
-        </div>
-        ` : ''}
-
-        <!-- 건물명 / 주소 / 뱃지 -->
-        <div style="padding:22px 32px 18px; border-bottom:1px solid #F1F5F9;">
-          <table style="width:100%; border-collapse:collapse;">
-            <tr>
-              <td style="vertical-align:top;">
-                <div style="font-size:21px; font-weight:800; color:#0F172A; line-height:1.25; margin-bottom:6px;">${d.building_name || '건물 분석 결과'}</div>
-                ${d.address ? `<div style="color:#64748B; font-size:11px; line-height:1.6;">📍 ${d.address}</div>` : ''}
-              </td>
-              <td style="text-align:right; vertical-align:top; white-space:nowrap; padding-left:12px;">
-                ${d.confidence ? `
-                <span style="display:inline-block; background:${confidenceBg}; color:${confidenceColor}; border:1px solid ${confidenceBorder}; padding:4px 12px; border-radius:20px; font-size:9.5px; font-weight:700;">
-                  신뢰도 ${d.confidence}
-                </span>
-                ` : ''}
-                ${d.building_type ? `
-                <br/>
-                <span style="display:inline-block; margin-top:5px; background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; padding:4px 12px; border-radius:20px; font-size:9.5px; font-weight:600;">
-                  ${d.building_type}
-                </span>
-                ` : ''}
-              </td>
-            </tr>
-          </table>
-        </div>
+        <!-- ③ 건물 이미지 + 건물 ID 블록 (가로 분할) -->
+        <table style="width:100%; border-collapse:collapse; border-bottom:1px solid #F1F5F9;">
+          <tr>
+            ${d.image_url ? `
+            <td style="width:160px; vertical-align:top; padding:0;">
+              <img src="${d.image_url}" style="width:160px; height:110px; object-fit:cover; display:block;" crossorigin="anonymous" />
+            </td>
+            ` : ''}
+            <td style="vertical-align:middle; padding:14px 20px 14px ${d.image_url ? '20px' : '28px'};">
+              <div style="font-size:17px; font-weight:800; color:#0F172A; line-height:1.3; margin-bottom:5px;">${d.building_name || '건물 분석 결과'}</div>
+              ${d.address ? `<div style="color:#64748B; font-size:10px; line-height:1.6; margin-bottom:6px;">📍 ${d.address}</div>` : ''}
+              <div>
+                ${d.confidence ? `<span style="display:inline-block; background:${confidenceBg}; color:${confidenceColor}; border:1px solid ${confidenceBorder}; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:700; margin-right:5px;">신뢰도 ${d.confidence}</span>` : ''}
+                ${d.building_type ? `<span style="display:inline-block; background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:600;">${d.building_type}</span>` : ''}
+              </div>
+            </td>
+          </tr>
+        </table>
 
         <!-- 본문 -->
         <div style="padding:24px 32px;">
