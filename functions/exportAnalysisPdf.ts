@@ -138,7 +138,8 @@ Deno.serve(async (req) => {
         const px = pad + i * pcw;
         page.drawRectangle({ x: px, y: tb(top + ph), width: pcw - 4, height: ph, color: SURF, borderColor: BORD, borderWidth: 0.5 });
         page.drawText(p.label, { x: px + 8, y: tb(top + 22), font, size: 7.5, color: GRAY });
-        page.drawText(p.value, { x: px + 8, y: tb(top + 42), font, size: 10,  color: p.accent ? BLUE : WHITE });
+        const clampedPrice = clampText(p.value, pcw - 20, 10, font);
+        page.drawText(clampedPrice, { x: px + 8, y: tb(top + 42), font, size: 10, color: p.accent ? BLUE : WHITE });
       }
       top += ph + 16;
     }
