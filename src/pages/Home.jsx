@@ -17,6 +17,7 @@ import LocationAccuracyPanel from '../components/building/LocationAccuracyPanel'
 import { useAnalysis } from '../components/hooks/useAnalysis';
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
+import { exportToPdf } from '../components/building/PdfExporter';
 
 // Fix leaflet marker icon
 delete L.Icon.Default.prototype._getIconUrl;
