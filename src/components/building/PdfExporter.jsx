@@ -95,17 +95,17 @@ export async function exportToPdf(analysisData) {
       const right = specs[i + 1];
       specRows.push(`
         <tr>
-          <td style="padding:5px; width:50%;">
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:14px 16px;">
-              <div style="color:#94A3B8; font-size:9.5px; margin-bottom:5px; font-weight:500;">${left.label}</div>
-              <div style="color:#0F172A; font-size:13px; font-weight:600;">${left.value}</div>
+          <td style="padding:4px; width:50%;">
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:7px; padding:9px 12px;">
+              <div style="color:#94A3B8; font-size:8.5px; margin-bottom:3px; font-weight:500;">${left.label}</div>
+              <div style="color:#0F172A; font-size:11.5px; font-weight:600;">${left.value}</div>
             </div>
           </td>
-          <td style="padding:5px; width:50%;">
+          <td style="padding:4px; width:50%;">
             ${right ? `
-            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:14px 16px;">
-              <div style="color:#94A3B8; font-size:9.5px; margin-bottom:5px; font-weight:500;">${right.label}</div>
-              <div style="color:#0F172A; font-size:13px; font-weight:600;">${right.value}</div>
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:7px; padding:9px 12px;">
+              <div style="color:#94A3B8; font-size:8.5px; margin-bottom:3px; font-weight:500;">${right.label}</div>
+              <div style="color:#0F172A; font-size:11.5px; font-weight:600;">${right.value}</div>
             </div>
             ` : ''}
           </td>
