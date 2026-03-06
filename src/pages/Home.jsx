@@ -151,6 +151,7 @@ export default function Home() {
               isAnalyzing={isAnalyzing}
               analysisStep={analysisStep}
               analysisError={analysisError}
+              onCancel={handleCancelAnalysis}
             />
 
             <div className="flex flex-wrap justify-center gap-2">
