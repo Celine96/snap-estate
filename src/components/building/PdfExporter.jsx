@@ -170,15 +170,9 @@ export async function exportToPdf(analysisData) {
 
         <!-- ② 신뢰도 낮음 경고 배너 -->
         ${isLowConfidence ? `
-        <div style="background:#FEF2F2; border-bottom:2px solid #FCA5A5; padding:10px 32px;">
-          <table style="width:100%; border-collapse:collapse;">
-            <tr>
-              <td style="vertical-align:middle;">
-                <span style="font-size:11px; color:#991B1B; font-weight:700;">⚠️ 주의: 신뢰도가 낮은 분석입니다</span>
-                <span style="font-size:10px; color:#B91C1C; margin-left:8px;">위치 정확도가 낮거나 참고 데이터가 부족합니다. 반드시 추가 검증 후 의사결정하세요.</span>
-              </td>
-            </tr>
-          </table>
+        <div style="background:#FEF2F2; border-bottom:1.5px solid #FCA5A5; padding:7px 28px;">
+          <span style="font-size:9.5px; color:#991B1B; font-weight:700;">⚠️ 신뢰도 낮음 — </span>
+          <span style="font-size:9.5px; color:#B91C1C;">위치 정확도가 낮거나 데이터 부족. 추가 검증 후 의사결정하세요.</span>
         </div>
         ` : ''}
 
