@@ -311,7 +311,7 @@ export async function exportToPdf(analysisData) {
           logging: false,
           allowTaint: false,
         },
-        jsPDF: { unit: 'px', format: [595, 1500], orientation: 'portrait' },
+        jsPDF: { unit: 'px', format: [595, 842], orientation: 'portrait' },
       })
       .from(container.firstElementChild)
       .save();
