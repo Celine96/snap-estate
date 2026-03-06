@@ -198,71 +198,77 @@ export async function exportToPdf(analysisData) {
         <!-- 본문 -->
         <div style="padding:14px 28px;">
 
-          <!-- ④ 시세 정보 -->
-          ${prices.length > 0 ? `
-          <div style="margin-bottom:28px;">
-            ${sectionHeader('시세 정보', '#1D4ED8')}
-            <table style="width:100%; border-collapse:collapse; margin-top:12px;">
-              <tr>${priceCardsHtml}</tr>
-            </table>
-          </div>
-          ` : ''}
-
-          <!-- ⑤ 투자 핵심 지표 -->
-          ${investItems.length > 0 ? `
-          <div style="margin-bottom:28px;">
-            ${sectionHeader('투자 핵심 지표', '#7C3AED')}
-            <table style="width:100%; border-collapse:collapse; margin-top:12px;">
-              <tr>${investCardsHtml}</tr>
-            </table>
-          </div>
-          ` : ''}
+          <!-- ④+⑤ 시세 정보 + 투자 지표 (좌우 2열) -->
+          <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+            <tr>
+              ${prices.length > 0 ? `
+              <td style="vertical-align:top; padding-right:8px; width:55%;">
+                ${sectionHeader('시세 정보', '#1D4ED8')}
+                <table style="width:100%; border-collapse:collapse; margin-top:8px;">
+                  <tr>${priceCardsHtml}</tr>
+                </table>
+              </td>
+              ` : ''}
+              ${investItems.length > 0 ? `
+              <td style="vertical-align:top; padding-left:${prices.length > 0 ? '8px' : '0'}; width:${prices.length > 0 ? '45%' : '100%'};">
+                ${sectionHeader('투자 지표', '#7C3AED')}
+                <table style="width:100%; border-collapse:collapse; margin-top:8px;">
+                  <tr>${investCardsHtml}</tr>
+                </table>
+              </td>
+              ` : ''}
+            </tr>
+          </table>
 
           <!-- ⑥ 투자 시그널 배너 -->
           ${signal ? `
-          <div style="margin-bottom:28px; background:${signal.bg}; border:1.5px solid ${signal.border}; border-left:4px solid ${signal.color}; border-radius:8px; padding:14px 18px;">
-            <span style="font-size:11px; color:${signal.color}; font-weight:700;">${signal.icon} ${signal.text}</span>
-            ${jeonseRatio !== null ? `<span style="font-size:10px; color:${signal.color}; margin-left:8px; opacity:0.75;">(전세가율 ${jeonseRatio}%)</span>` : ''}
+          <div style="margin-bottom:12px; background:${signal.bg}; border:1px solid ${signal.border}; border-left:4px solid ${signal.color}; border-radius:7px; padding:9px 14px;">
+            <span style="font-size:10px; color:${signal.color}; font-weight:700;">${signal.icon} ${signal.text}</span>
+            ${jeonseRatio !== null ? `<span style="font-size:9.5px; color:${signal.color}; margin-left:6px; opacity:0.75;">(전세가율 ${jeonseRatio}%)</span>` : ''}
           </div>
           ` : ''}
 
           <!-- ⑦ 건물 스펙 -->
           ${specs.length > 0 ? `
-          <div style="margin-bottom:28px;">
+          <div style="margin-bottom:12px;">
             ${sectionHeader('건물 스펙', '#0369A1')}
-            <table style="width:100%; border-collapse:collapse; margin-top:12px;">
+            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
               ${specRows.join('')}
             </table>
           </div>
           ` : ''}
 
-          <!-- ⑧ 시세 동향 -->
-          ${d.price_trend ? `
-          <div style="margin-bottom:28px;">
-            ${sectionHeader('시세 동향', '#059669')}
-            <div style="margin-top:12px; background:#F0FDF4; border:1px solid #BBF7D0; border-left:4px solid #059669; border-radius:8px; padding:14px 18px;">
-              <div style="color:#064E3B; font-size:11px; line-height:1.9;">${d.price_trend}</div>
-            </div>
-          </div>
-          ` : ''}
-
-          <!-- ⑨ AI 분석 요약 -->
-          ${d.analysis_summary ? `
-          <div style="margin-bottom:28px;">
-            ${sectionHeader('AI 분석 요약', '#D97706')}
-            <div style="margin-top:12px; background:#FFFBEB; border:1px solid #FDE68A; border-left:4px solid #D97706; border-radius:8px; padding:14px 18px;">
-              <div style="color:#451A03; font-size:11px; line-height:1.9;">${d.analysis_summary}</div>
-            </div>
-          </div>
+          <!-- ⑧+⑨ 시세 동향 + AI 분석 요약 (좌우 2열) -->
+          ${(d.price_trend || d.analysis_summary) ? `
+          <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+            <tr>
+              ${d.price_trend ? `
+              <td style="vertical-align:top; padding-right:${d.analysis_summary ? '6px' : '0'}; width:${d.analysis_summary ? '50%' : '100%'};">
+                ${sectionHeader('시세 동향', '#059669')}
+                <div style="margin-top:8px; background:#F0FDF4; border:1px solid #BBF7D0; border-left:3px solid #059669; border-radius:7px; padding:10px 12px;">
+                  <div style="color:#064E3B; font-size:9.5px; line-height:1.7;">${d.price_trend}</div>
+                </div>
+              </td>
+              ` : ''}
+              ${d.analysis_summary ? `
+              <td style="vertical-align:top; padding-left:${d.price_trend ? '6px' : '0'}; width:${d.price_trend ? '50%' : '100%'};">
+                ${sectionHeader('AI 분석 요약', '#D97706')}
+                <div style="margin-top:8px; background:#FFFBEB; border:1px solid #FDE68A; border-left:3px solid #D97706; border-radius:7px; padding:10px 12px;">
+                  <div style="color:#451A03; font-size:9.5px; line-height:1.7;">${d.analysis_summary}</div>
+                </div>
+              </td>
+              ` : ''}
+            </tr>
+          </table>
           ` : ''}
 
           <!-- ⑩ 건물 특징 태그 -->
           ${d.building_features && d.building_features.length > 0 ? `
-          <div style="margin-bottom:16px;">
+          <div style="margin-bottom:8px;">
             ${sectionHeader('건물 특징', '#4F46E5')}
-            <div style="margin-top:12px;">
+            <div style="margin-top:8px;">
               ${d.building_features.map(f => `
-                <span style="display:inline-block; background:#EEF2FF; color:#3730A3; border:1px solid #C7D2FE; padding:5px 12px; border-radius:20px; font-size:10px; font-weight:500; margin:0 5px 6px 0;">${f}</span>
+                <span style="display:inline-block; background:#EEF2FF; color:#3730A3; border:1px solid #C7D2FE; padding:3px 9px; border-radius:20px; font-size:9.5px; font-weight:500; margin:0 4px 5px 0;">${f}</span>
               `).join('')}
             </div>
           </div>
