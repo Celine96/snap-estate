@@ -455,10 +455,8 @@ export default function Home() {
                         <p className="text-red-400 text-xs text-center">{analysisError}</p>
                       </div>
                     )}
-                    {!showManualInput && !isAnalyzing && !analysisError && (
-                      <p className="text-[#9AA0A6]/60 text-xs text-center">
-                        부정확 선택 시 주소를 직접 입력하여 재분석합니다
-                      </p>
+                    {!showManualInput && !isAnalyzing && !analysisError && analysisData?.location_accuracy && (
+                      <p className="text-emerald-400/80 text-xs text-center">✓ 피드백이 저장되었습니다</p>
                     )}
                   </div>
                 </motion.div>
