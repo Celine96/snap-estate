@@ -42,6 +42,7 @@ export default function Home() {
     setShowManualInput,
     setActiveTab,
     handleImageSelected,
+    handleCancelAnalysis,
     handleSelectRecent,
     handleUpdateAnalysis,
     handleManualAddressSubmit,
