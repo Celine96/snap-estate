@@ -113,7 +113,16 @@ export default function RecentAnalyses({ analyses, onSelect }) {
       )}
 
       {searchQuery && filtered.length === 0 && (
-        <p className="text-[#9AA0A6]/50 text-xs text-center py-4">검색 결과가 없습니다</p>
+        <div className="flex flex-col items-center gap-2 py-6">
+          <Search className="w-6 h-6 text-[#9AA0A6]/30" />
+          <p className="text-[#9AA0A6]/50 text-xs">'{searchQuery}'에 대한 검색 결과가 없습니다</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-[#4D96FF] text-xs hover:underline"
+          >
+            검색 초기화
+          </button>
+        </div>
       )}
     </motion.div>
   );
