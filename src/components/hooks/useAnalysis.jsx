@@ -348,6 +348,8 @@ ${addressFromGPS ? `
     } catch (error) {
       console.error('분석 오류:', error);
       setAnalysisError(error.message || '분석 중 오류가 발생했습니다.');
+      // 분석 실패 시에도 결과 화면 유지 (이미지 미리보기 보존)
+      // showResult는 변경하지 않아 ImageUploader가 그대로 유지됨
     } finally {
       setIsAnalyzing(false);
       setAnalysisStep(null);
