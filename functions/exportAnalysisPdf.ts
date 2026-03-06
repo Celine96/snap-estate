@@ -30,6 +30,19 @@ function wrapText(text, maxW, size, fnt) {
   return lines;
 }
 
+// 단일 라인에 맞게 텍스트를 자르고 '...' 추가
+function clampText(text, maxW, size, fnt) {
+  if (!text) return '';
+  const str = String(text);
+  if (fnt.widthOfTextAtSize(str, size) <= maxW) return str;
+  let result = '';
+  for (const ch of str) {
+    if (fnt.widthOfTextAtSize(result + ch + '...', size) > maxW) break;
+    result += ch;
+  }
+  return result + '...';
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
