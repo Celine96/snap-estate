@@ -196,7 +196,7 @@ export async function exportToPdf(analysisData) {
         </table>
 
         <!-- 본문 -->
-        <div style="padding:24px 32px;">
+        <div style="padding:14px 28px;">
 
           <!-- ④ 시세 정보 -->
           ${prices.length > 0 ? `
