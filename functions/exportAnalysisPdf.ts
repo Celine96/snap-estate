@@ -58,12 +58,14 @@ Deno.serve(async (req) => {
     // Download Noto Sans KR from jsDelivr CDN (stable, fast, no rate limit)
     const FONT_URLS = [
       'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-kr@5.1.0/files/noto-sans-kr-korean-400-normal.woff',
+      'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-kr/files/noto-sans-kr-korean-400-normal.woff',
       'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgm203Tq4JJWq209pU0DPdWuqxJFA4GNDCBYtw.119.woff2',
+      'https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/Sans/OTF/Korean/NotoSansKR-Regular.otf',
     ];
     let fontBytes = null;
     for (const url of FONT_URLS) {
       try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
         if (res.ok) { fontBytes = await res.arrayBuffer(); break; }
       } catch (_) { /* try next */ }
     }
