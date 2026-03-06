@@ -368,7 +368,10 @@ export default function Home() {
 
                   {/* 위치 정확도 평가 */}
                   <div className="bg-[#1C1C1E] rounded-2xl border border-[#2C2C2E] p-4 space-y-3">
-                    <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
+                    <div>
+                      <h4 className="text-white font-medium text-sm">위치 정확도를 평가해주세요</h4>
+                      <p className="text-[#9AA0A6]/70 text-xs mt-1">AI가 추정한 위치가 맞는지 확인하고, 부정확하면 주소를 직접 입력해 더 정확한 시세를 받아보세요.</p>
+                    </div>
                     {isAnalyzing ? (
                       <div className="flex flex-col items-center justify-center gap-2 py-4">
                         <div className="w-5 h-5 border-2 border-[#2C2C2E] border-t-[#4D96FF] rounded-full animate-spin" />
