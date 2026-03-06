@@ -204,7 +204,7 @@ export async function exportToPdf(analysisData) {
               ${prices.length > 0 ? `
               <td style="vertical-align:top; padding-right:8px; width:55%;">
                 ${sectionHeader('시세 정보', '#1D4ED8')}
-                <div style="padding-left:12px; margin-top:8px;">
+                <div style="padding-left:16px; margin-top:8px;">
                   <table style="width:100%; border-collapse:collapse;">
                     <tr>${priceCardsHtml}</tr>
                   </table>
