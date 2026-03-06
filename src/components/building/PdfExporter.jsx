@@ -4,117 +4,16 @@ export async function exportToPdf(analysisData) {
   if (!analysisData) return;
 
   try {
-    const { jsPDF } = await import('jspdf');
+    const html2pdf = (await import('html2pdf.js')).default;
     const d = analysisData;
     const dateStr = new Date().toLocaleDateString('ko-KR');
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
-    const W = 595;
-    let y = 0;
-
-    // ── 헤더 배경
-    doc.setFillColor(30, 41, 59);
-    doc.rect(0, 0, W, 56, 'F');
-
-    // 브랜드명
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SnapEstate', 40, 35);
-
-    // 날짜
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(148, 163, 184);
-    doc.text(dateStr, W - 40, 32, { align: 'right' });
-    doc.setFontSize(8);
-    doc.text('AI Building Analysis', W - 40, 44, { align: 'right' });
-
-    y = 80;
-
-    // ── 건물 이미지 (있을 경우)
-    if (d.image_url) {
-      try {
-        const img = await loadImageAsBase64(d.image_url);
-        if (img) {
-          doc.addImage(img, 'JPEG', 40, y, W - 80, 160, undefined, 'FAST');
-          // 이미지 위에 그라데이션 효과 대신 하단 오버레이
-          doc.setFillColor(15, 23, 42, 0.6);
-          y += 168;
-        }
-      } catch (e) {
-        // 이미지 로드 실패 시 스킵
-      }
-    }
-
-    // ── 건물명 섹션
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    const nameText = d.building_name || 'Building Analysis';
-    doc.text(nameText, 40, y + 24);
-    y += 36;
-
-    if (d.address) {
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(71, 85, 105);
-      doc.text(d.address, 40, y);
-      y += 16;
-    }
-
-    if (d.confidence) {
-      const cColor = d.confidence === '높음' ? [6, 95, 70] : d.confidence === '보통' ? [146, 64, 14] : [153, 27, 27];
-      const cBg    = d.confidence === '높음' ? [236, 253, 245] : d.confidence === '보통' ? [255, 251, 235] : [254, 242, 242];
-      doc.setFillColor(...cBg);
-      doc.roundedRect(40, y, 72, 16, 3, 3, 'F');
-      doc.setTextColor(...cColor);
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`신뢰도 ${d.confidence}`, 76, y + 10.5, { align: 'center' });
-      y += 28;
-    }
-
-    // ── 구분선
-    y += 6;
-    doc.setDrawColor(226, 232, 240);
-    doc.setLineWidth(1);
-    doc.line(40, y, W - 40, y);
-    y += 20;
-
-    // ── 시세 정보
     const prices = [
-      d.estimated_price_sale    ? { label: '매매가', value: d.estimated_price_sale,    bg: [239, 246, 255], border: [191, 219, 254], text: [29, 78, 216] } : null,
-      d.estimated_price_rent    ? { label: '전세가', value: d.estimated_price_rent,    bg: [236, 253, 245], border: [167, 243, 208], text: [6, 95, 70]   } : null,
-      d.estimated_price_monthly ? { label: '월세',   value: d.estimated_price_monthly, bg: [255, 251, 235], border: [253, 230, 138], text: [146, 64, 14] } : null,
+      d.estimated_price_sale    ? { label: '매매가', value: d.estimated_price_sale,    color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' } : null,
+      d.estimated_price_rent    ? { label: '전세가', value: d.estimated_price_rent,    color: '#065F46', bg: '#ECFDF5', border: '#A7F3D0' } : null,
+      d.estimated_price_monthly ? { label: '월세',   value: d.estimated_price_monthly, color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' } : null,
     ].filter(Boolean);
 
-    if (prices.length > 0) {
-      sectionLabel(doc, 40, y, '시세 정보', [59, 130, 246]);
-      y += 22;
-
-      const cardW = (W - 80 - (prices.length - 1) * 10) / prices.length;
-      prices.forEach((p, i) => {
-        const x = 40 + i * (cardW + 10);
-        doc.setFillColor(...p.bg);
-        doc.setDrawColor(...p.border);
-        doc.setLineWidth(1);
-        doc.roundedRect(x, y, cardW, 54, 6, 6, 'FD');
-
-        doc.setTextColor(...p.text);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text(p.label, x + 12, y + 18);
-
-        doc.setFontSize(i === 0 ? 13 : 11);
-        doc.setFont('helvetica', 'bold');
-        const valueText = p.value.length > 16 ? p.value.substring(0, 16) + '...' : p.value;
-        doc.text(valueText, x + 12, y + 38);
-      });
-      y += 66;
-    }
-
-    // ── 건물 스펙
     const specs = [
       d.building_type         ? { label: '건물 유형', value: d.building_type }                      : null,
       d.estimated_year        ? { label: '건축연도',  value: `${d.estimated_year}년` }               : null,
@@ -122,126 +21,202 @@ export async function exportToPdf(analysisData) {
       d.estimated_area_pyeong ? { label: '면적',      value: `${d.estimated_area_pyeong}평` }        : null,
     ].filter(Boolean);
 
-    if (specs.length > 0) {
-      sectionLabel(doc, 40, y, '건물 스펙', [139, 92, 246]);
-      y += 22;
+    const confidenceBg     = d.confidence === '높음' ? '#ECFDF5' : d.confidence === '보통' ? '#FFFBEB' : '#FEF2F2';
+    const confidenceColor  = d.confidence === '높음' ? '#065F46' : d.confidence === '보통' ? '#92400E' : '#991B1B';
+    const confidenceBorder = d.confidence === '높음' ? '#A7F3D0' : d.confidence === '보통' ? '#FDE68A' : '#FECACA';
 
-      const cols = 2;
-      const specW = (W - 80 - 10) / cols;
-      specs.forEach((s, i) => {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const x = 40 + col * (specW + 10);
-        const sy = y + row * 48;
+    // 시세 카드 HTML (table 기반으로 안전하게)
+    const priceCardsHtml = prices.map(p => `
+      <td style="padding:4px;">
+        <div style="background:${p.bg}; border:1.5px solid ${p.border}; border-radius:10px; padding:14px;">
+          <div style="color:${p.color}; font-size:10px; font-weight:600; margin-bottom:6px; opacity:0.8;">${p.label}</div>
+          <div style="color:${p.color}; font-size:14px; font-weight:700;">${p.value}</div>
+        </div>
+      </td>
+    `).join('');
 
-        doc.setFillColor(248, 250, 252);
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.8);
-        doc.roundedRect(x, sy, specW, 38, 5, 5, 'FD');
-
-        doc.setTextColor(148, 163, 184);
-        doc.setFontSize(8.5);
-        doc.setFont('helvetica', 'normal');
-        doc.text(s.label, x + 12, sy + 14);
-
-        doc.setTextColor(15, 23, 42);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(s.value, x + 12, sy + 30);
-      });
-      y += Math.ceil(specs.length / cols) * 48 + 12;
+    // 스펙 카드 HTML (table 기반 2열)
+    const specRows = [];
+    for (let i = 0; i < specs.length; i += 2) {
+      const left = specs[i];
+      const right = specs[i + 1];
+      specRows.push(`
+        <tr>
+          <td style="padding:4px; width:50%;">
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px;">
+              <div style="color:#94A3B8; font-size:10px; margin-bottom:4px;">${left.label}</div>
+              <div style="color:#0F172A; font-size:13px; font-weight:600;">${left.value}</div>
+            </div>
+          </td>
+          <td style="padding:4px; width:50%;">
+            ${right ? `
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:14px;">
+              <div style="color:#94A3B8; font-size:10px; margin-bottom:4px;">${right.label}</div>
+              <div style="color:#0F172A; font-size:13px; font-weight:600;">${right.value}</div>
+            </div>
+            ` : ''}
+          </td>
+        </tr>
+      `);
     }
 
-    // ── 시세 동향
-    if (d.price_trend) {
-      sectionLabel(doc, 40, y, '시세 동향', [16, 185, 129]);
-      y += 22;
-      y = textBox(doc, d.price_trend, 40, y, W - 80, [240, 253, 244], [187, 247, 208], [6, 78, 59]);
-      y += 10;
-    }
+    const html = `
+      <div style="
+        background: #FFFFFF;
+        color: #1A1A1A;
+        font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+        width: 595px;
+        box-sizing: border-box;
+      ">
+        <!-- 헤더 -->
+        <div style="background:#1E293B; padding:18px 36px; overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="vertical-align:middle;">
+                <span style="color:#FFFFFF; font-size:17px; font-weight:700;">SnapEstate</span>
+                <span style="color:#94A3B8; font-size:10px; margin-left:10px;">AI 건물 분석 보고서</span>
+              </td>
+              <td style="text-align:right; vertical-align:middle;">
+                <span style="color:#CBD5E1; font-size:10px;">${dateStr}</span>
+              </td>
+            </tr>
+          </table>
+        </div>
 
-    // ── AI 분석 요약
-    if (d.analysis_summary) {
-      sectionLabel(doc, 40, y, 'AI 분석 요약', [245, 158, 11]);
-      y += 22;
-      y = textBox(doc, d.analysis_summary, 40, y, W - 80, [255, 251, 235], [253, 230, 138], [69, 26, 3]);
-      y += 10;
-    }
+        <!-- 건물 이미지 -->
+        ${d.image_url ? `
+        <div style="overflow:hidden; height:180px;">
+          <img src="${d.image_url}" style="width:100%; height:180px; object-fit:cover; display:block;" crossorigin="anonymous" />
+        </div>
+        ` : ''}
 
-    // ── 푸터
-    const footerY = Math.max(y + 20, 800);
-    doc.setFillColor(248, 250, 252);
-    doc.rect(0, footerY, W, 36, 'F');
-    doc.setDrawColor(226, 232, 240);
-    doc.setLineWidth(0.5);
-    doc.line(0, footerY, W, footerY);
+        <!-- 본문 -->
+        <div style="padding:28px 36px;">
 
-    doc.setTextColor(148, 163, 184);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.', 40, footerY + 21);
+          <!-- 건물명 + 주소 -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:20px; font-weight:700; color:#0F172A; margin-bottom:8px; line-height:1.3;">${d.building_name || '건물 분석 결과'}</div>
+            ${d.address ? `<div style="color:#475569; font-size:11px; margin-bottom:10px; line-height:1.5;">📍 ${d.address}</div>` : ''}
+            ${d.confidence ? `
+            <span style="display:inline-block; background:${confidenceBg}; color:${confidenceColor}; border:1px solid ${confidenceBorder}; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:600;">
+              신뢰도 ${d.confidence}
+            </span>
+            ` : ''}
+          </div>
 
-    doc.setTextColor(59, 130, 246);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('SnapEstate', W - 40, footerY + 21, { align: 'right' });
+          <!-- 구분선 -->
+          <div style="border-top:2px solid #F1F5F9; margin-bottom:22px;"></div>
 
-    doc.save(`snapestate_${d.building_name || 'report'}.pdf`);
+          <!-- 시세 정보 -->
+          ${prices.length > 0 ? `
+          <div style="margin-bottom:24px;">
+            <div style="margin-bottom:12px; overflow:hidden;">
+              <div style="display:inline-block; width:3px; height:15px; background:#3B82F6; border-radius:2px; vertical-align:middle; margin-right:8px;"></div>
+              <span style="font-size:13px; font-weight:700; color:#0F172A; vertical-align:middle;">시세 정보</span>
+              ${d.price_type ? `<span style="margin-left:8px; background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; padding:2px 8px; border-radius:10px; font-size:9px; vertical-align:middle;">${d.price_type}</span>` : ''}
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+              <tr>${priceCardsHtml}</tr>
+            </table>
+          </div>
+          ` : ''}
+
+          <!-- 건물 스펙 -->
+          ${specs.length > 0 ? `
+          <div style="margin-bottom:24px;">
+            <div style="margin-bottom:12px; overflow:hidden;">
+              <div style="display:inline-block; width:3px; height:15px; background:#8B5CF6; border-radius:2px; vertical-align:middle; margin-right:8px;"></div>
+              <span style="font-size:13px; font-weight:700; color:#0F172A; vertical-align:middle;">건물 스펙</span>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+              ${specRows.join('')}
+            </table>
+          </div>
+          ` : ''}
+
+          <!-- 시세 동향 -->
+          ${d.price_trend ? `
+          <div style="margin-bottom:24px;">
+            <div style="margin-bottom:12px;">
+              <div style="display:inline-block; width:3px; height:15px; background:#10B981; border-radius:2px; vertical-align:middle; margin-right:8px;"></div>
+              <span style="font-size:13px; font-weight:700; color:#0F172A; vertical-align:middle;">시세 동향</span>
+            </div>
+            <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-left:3px solid #10B981; border-radius:8px; padding:14px 16px;">
+              <div style="color:#064E3B; font-size:11px; line-height:1.8;">${d.price_trend}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- AI 분석 요약 -->
+          ${d.analysis_summary ? `
+          <div style="margin-bottom:24px;">
+            <div style="margin-bottom:12px;">
+              <div style="display:inline-block; width:3px; height:15px; background:#F59E0B; border-radius:2px; vertical-align:middle; margin-right:8px;"></div>
+              <span style="font-size:13px; font-weight:700; color:#0F172A; vertical-align:middle;">AI 분석 요약</span>
+            </div>
+            <div style="background:#FFFBEB; border:1px solid #FDE68A; border-left:3px solid #F59E0B; border-radius:8px; padding:14px 16px;">
+              <div style="color:#451A03; font-size:11px; line-height:1.8;">${d.analysis_summary}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- 건물 특징 태그 -->
+          ${d.building_features && d.building_features.length > 0 ? `
+          <div style="margin-bottom:24px;">
+            <div style="margin-bottom:12px;">
+              <div style="display:inline-block; width:3px; height:15px; background:#6366F1; border-radius:2px; vertical-align:middle; margin-right:8px;"></div>
+              <span style="font-size:13px; font-weight:700; color:#0F172A; vertical-align:middle;">건물 특징</span>
+            </div>
+            <div>
+              ${d.building_features.map(f => `
+                <span style="display:inline-block; background:#EEF2FF; color:#3730A3; border:1px solid #C7D2FE; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:500; margin:3px 4px 3px 0;">${f}</span>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+        </div>
+
+        <!-- 푸터 -->
+        <div style="background:#F8FAFC; border-top:1px solid #E2E8F0; padding:14px 36px; overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="color:#94A3B8; font-size:8.5px; vertical-align:middle;">※ AI 기반 추정 정보이며 실제 시세와 다를 수 있습니다.</td>
+              <td style="text-align:right; color:#3B82F6; font-size:11px; font-weight:700; vertical-align:middle;">SnapEstate</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    document.body.appendChild(container);
+
+    await html2pdf()
+      .set({
+        margin: 0,
+        filename: `snapestate_${d.building_name || 'report'}.pdf`,
+        image: { type: 'jpeg', quality: 0.97 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#FFFFFF',
+          logging: false,
+          allowTaint: false,
+        },
+        jsPDF: { unit: 'px', format: [595, 1400], orientation: 'portrait' },
+      })
+      .from(container.firstElementChild)
+      .save();
+
+    document.body.removeChild(container);
     toast.success('PDF가 다운로드되었습니다');
   } catch (e) {
     console.error(e);
     toast.error('PDF 생성에 실패했습니다');
   }
-}
-
-// ── 섹션 레이블 헬퍼
-function sectionLabel(doc, x, y, text, color) {
-  doc.setFillColor(...color);
-  doc.rect(x, y, 3, 14, 'F');
-  doc.setTextColor(15, 23, 42);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(text, x + 10, y + 11);
-}
-
-// ── 텍스트 박스 헬퍼 (자동 줄바꿈)
-function textBox(doc, text, x, y, width, bgColor, borderColor, textColor) {
-  doc.setFontSize(9.5);
-  doc.setFont('helvetica', 'normal');
-  const lines = doc.splitTextToSize(text, width - 24);
-  const boxH = lines.length * 14 + 20;
-
-  doc.setFillColor(...bgColor);
-  doc.setDrawColor(...borderColor);
-  doc.setLineWidth(1);
-  doc.roundedRect(x, y, width, boxH, 6, 6, 'FD');
-
-  // 왼쪽 강조선
-  doc.setFillColor(...borderColor);
-  doc.rect(x, y, 3, boxH, 'F');
-
-  doc.setTextColor(...textColor);
-  lines.forEach((line, i) => {
-    doc.text(line, x + 16, y + 16 + i * 14);
-  });
-
-  return y + boxH;
-}
-
-// ── 이미지 → base64 변환
-function loadImageAsBase64(url) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext('2d').drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
-    };
-    img.onerror = () => resolve(null);
-    img.src = url;
-    setTimeout(() => resolve(null), 5000);
-  });
 }
