@@ -186,6 +186,14 @@ export default function ImageUploader({ onImageSelected, isAnalyzing, analysisSt
                         />
                       ))}
                     </div>
+                    {onCancel && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); clearImage(); onCancel(); }}
+                        className="mt-5 px-5 py-2 rounded-xl border border-white/20 text-white/60 hover:text-white text-xs font-medium transition-all"
+                      >
+                        취소
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
