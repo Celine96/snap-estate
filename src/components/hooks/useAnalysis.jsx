@@ -324,6 +324,8 @@ ${addressFromGPS ? `
         }
       });
 
+      if (abortRef.cancelled) return;
+
       // 7단계: 저장
       setAnalysisStep('saving');
 
