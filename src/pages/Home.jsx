@@ -247,34 +247,27 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-between p-4 pb-0">
                 <div role="tablist" aria-label="분석 결과 탭" className="flex gap-2">
-                  <button
-                    role="tab"
-                    aria-selected={activeTab === 'results'}
-                    aria-controls="panel-results"
-                    onClick={() => setActiveTab('results')}
-                    className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
-                      activeTab === 'results'
-                        ? 'bg-[#1C1C1E] text-white border-t border-x border-[#2C2C2E]'
-                        : 'text-[#9AA0A6] hover:text-white'
-                    }`}
-                  >
-                    <MapPin className="w-4 h-4 inline mr-1" aria-hidden="true" />
-                    위치 정보
-                  </button>
-                  <button
-                    role="tab"
-                    aria-selected={activeTab === 'property'}
-                    aria-controls="panel-property"
-                    onClick={() => setActiveTab('property')}
-                    className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
-                      activeTab === 'property'
-                        ? 'bg-[#1C1C1E] text-white border-t border-x border-[#2C2C2E]'
-                        : 'text-[#9AA0A6] hover:text-white'
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4 inline mr-1" aria-hidden="true" />
-                    매물 정보
-                  </button>
+                  {[
+                    { key: 'results', label: '위치 정보', Icon: Building2 },
+                    { key: 'property', label: '매물 정보', Icon: Building2 },
+                  ].map(({ key, label, Icon }) => (
+                    <button
+                      key={key}
+                      role="tab"
+                      id={`tab-${key}`}
+                      aria-selected={activeTab === key}
+                      aria-controls={`panel-${key}`}
+                      onClick={() => setActiveTab(key)}
+                      className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
+                        activeTab === key
+                          ? 'bg-[#1C1C1E] text-white border-t border-x border-[#2C2C2E]'
+                          : 'text-[#9AA0A6] hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 inline mr-1" aria-hidden="true" />
+                      {label}
+                    </button>
+                  ))}
                 </div>
                 <div className="flex items-center gap-1">
                   <button
