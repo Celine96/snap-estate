@@ -248,10 +248,7 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-between p-4 pb-0">
                 <div role="tablist" aria-label="분석 결과 탭" className="flex gap-2">
-                  {[
-                    { key: 'results', label: '위치 정보', Icon: Building2 },
-                    { key: 'property', label: '매물 정보', Icon: Building2 },
-                  ].map(({ key, label, Icon }) => (
+                  {(['results', 'property']).map((key) => (
                     <button
                       key={key}
                       role="tab"
@@ -265,8 +262,8 @@ export default function Home() {
                           : 'text-[#9AA0A6] hover:text-white'
                       }`}
                     >
-                      <Icon className="w-4 h-4 inline mr-1" aria-hidden="true" />
-                      {label}
+                      {key === 'results' ? <MapPin className="w-4 h-4 inline mr-1" aria-hidden="true" /> : <Building2 className="w-4 h-4 inline mr-1" aria-hidden="true" />}
+                      {key === 'results' ? '위치 정보' : '매물 정보'}
                     </button>
                   ))}
                 </div>
