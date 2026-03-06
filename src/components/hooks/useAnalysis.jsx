@@ -443,6 +443,8 @@ ${addressFromGPS ? `
         console.log('지오코딩 실패:', e);
       }
 
+      if (!analysisData) return;
+
       const updatedData = {
         ...analysisData,
         address: manualAddress,
