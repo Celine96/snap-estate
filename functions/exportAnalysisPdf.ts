@@ -42,10 +42,19 @@ Deno.serve(async (req) => {
     const d = await base44.entities.BuildingAnalysis.get(id);
     if (!d) return Response.json({ error: '데이터를 찾을 수 없습니다.' }, { status: 404 });
 
-    // Download Noto Sans KR (SubsetOTF: Korean + Latin + Numbers)
-    const fontRes = await fetch('https://github.com/googlefonts/noto-cjk/raw/main/Sans/SubsetOTF/KR/NotoSansKR-Regular.otf');
-    if (!fontRes.ok) throw new Error('Font download failed: ' + fontRes.status);
-    const fontBytes = await fontRes.arrayBuffer();
+    // Download Noto Sans KR from jsDelivr CDN (stable, fast, no rate limit)
+    const FONT_URLS = [
+      'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-kr@5.1.0/files/noto-sans-kr-korean-400-normal.woff',
+      'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgm203Tq4JJWq209pU0DPdWuqxJFA4GNDCBYtw.119.woff2',
+    ];
+    let fontBytes = null;
+    for (const url of FONT_URLS) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (res.ok) { fontBytes = await res.arrayBuffer(); break; }
+      } catch (_) { /* try next */ }
+    }
+    if (!fontBytes) throw new Error('한글 폰트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
 
     const pdfDoc = await PDFDocument.create();
     pdfDoc.registerFontkit(fontkit);
