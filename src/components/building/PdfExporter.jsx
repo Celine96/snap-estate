@@ -236,9 +236,11 @@ export async function exportToPdf(analysisData) {
           ${specs.length > 0 ? `
           <div style="margin-bottom:12px;">
             ${sectionHeader('건물 스펙', '#0369A1')}
-            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
-              ${specRows.join('')}
-            </table>
+            <div style="padding-left:12px; margin-top:8px;">
+              <table style="width:100%; border-collapse:collapse;">
+                ${specRows.join('')}
+              </table>
+            </div>
           </div>
           ` : ''}
 
