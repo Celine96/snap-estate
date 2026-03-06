@@ -257,6 +257,8 @@ ${addressFromGPS ? `
         }
       }
 
+      if (abortRef.cancelled) return;
+
       // 6단계: 상세 분석 (가격 추정 + 투자 분석)
       setAnalysisStep('detailed_analysis');
 
