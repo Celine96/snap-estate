@@ -1,0 +1,148 @@
+{
+  "name": "BuildingAnalysis",
+  "type": "object",
+  "properties": {
+    "image_url": {
+      "type": "string",
+      "description": "\uc5c5\ub85c\ub4dc\ub41c \uac74\ubb3c \uc774\ubbf8\uc9c0 URL"
+    },
+    "building_name": {
+      "type": "string",
+      "description": "\uac74\ubb3c\uba85"
+    },
+    "address": {
+      "type": "string",
+      "description": "\ucd94\uc815 \uc8fc\uc18c"
+    },
+    "district": {
+      "type": "string",
+      "description": "\uad6c/\ub3d9 \uc815\ubcf4"
+    },
+    "building_type": {
+      "type": "string",
+      "enum": [
+        "\uc544\ud30c\ud2b8",
+        "\uc624\ud53c\uc2a4\ud154",
+        "\uc0c1\uac00",
+        "\ube4c\ub77c/\ub2e4\uc138\ub300",
+        "\ub2e8\ub3c5\uc8fc\ud0dd",
+        "\uc624\ud53c\uc2a4",
+        "\uae30\ud0c0"
+      ],
+      "description": "\uac74\ubb3c \uc720\ud615"
+    },
+    "estimated_year": {
+      "type": "string",
+      "description": "\ucd94\uc815 \uac74\ucd95\uc5f0\ub3c4"
+    },
+    "estimated_floors": {
+      "type": "number",
+      "description": "\ucd94\uc815 \uce35\uc218"
+    },
+    "estimated_area_pyeong": {
+      "type": "string",
+      "description": "\ucd94\uc815 \uba74\uc801(\ud3c9)"
+    },
+    "price_type": {
+      "type": "string",
+      "enum": [
+        "\ucd5c\uadfc \uc2e4\uac70\ub798\uac00",
+        "\uc2e0\uaddc \ud638\uac00",
+        "AI \ucd94\uc815\uac00"
+      ],
+      "default": "\ucd5c\uadfc \uc2e4\uac70\ub798\uac00",
+      "description": "\uac00\uaca9 \uc815\ubcf4 \uc720\ud615"
+    },
+    "estimated_price_sale": {
+      "type": "string",
+      "description": "\ucd94\uc815 \ub9e4\ub9e4\uac00"
+    },
+    "estimated_price_rent": {
+      "type": "string",
+      "description": "\ucd94\uc815 \uc804\uc138\uac00"
+    },
+    "estimated_price_monthly": {
+      "type": "string",
+      "description": "\ucd94\uc815 \uc6d4\uc138 (\ubcf4\uc99d\uae08/\uc6d4\uc138)"
+    },
+    "price_trend": {
+      "type": "string",
+      "description": "\uc2dc\uc138 \ub3d9\ud5a5 \uc124\uba85"
+    },
+    "building_features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\uac74\ubb3c \ud2b9\uc9d5\ub4e4"
+    },
+    "nearby_facilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\uc8fc\ubcc0 \uc2dc\uc124"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "\ucd94\uc815 \uc704\ub3c4"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "\ucd94\uc815 \uacbd\ub3c4"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "\ub192\uc74c",
+        "\ubcf4\ud1b5",
+        "\ub0ae\uc74c"
+      ],
+      "description": "\ubd84\uc11d \uc2e0\ub8b0\ub3c4"
+    },
+    "location_accuracy": {
+      "type": "string",
+      "enum": [
+        "incorrect",
+        "nearby",
+        "accurate"
+      ],
+      "description": "\uc0ac\uc6a9\uc790\uac00 \ud3c9\uac00\ud55c \uc704\uce58 \uc815\ud655\ub3c4"
+    },
+    "analysis_summary": {
+      "type": "string",
+      "description": "AI \ubd84\uc11d \uc694\uc57d"
+    },
+    "zoning_info": {
+      "type": "object",
+      "properties": {
+        "land_use_zone": {
+          "type": "string",
+          "description": "\uc6a9\ub3c4\uc9c0\uc5ed (\uc608: \uc81c2\uc885\uc77c\ubc18\uc8fc\uac70\uc9c0\uc5ed)"
+        },
+        "building_to_land_ratio": {
+          "type": "string",
+          "description": "\uac74\ud3d0\uc728 (%)"
+        },
+        "floor_area_ratio": {
+          "type": "string",
+          "description": "\uc6a9\uc801\ub960 (%)"
+        },
+        "legal_restrictions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "\ubc95\uc801 \uc81c\ud55c\uc0ac\ud56d"
+        },
+        "development_plan": {
+          "type": "string",
+          "description": "\uac1c\ubc1c\uacc4\ud68d \uc815\ubcf4"
+        }
+      }
+    }
+  },
+  "required": [
+    "image_url"
+  ]
+}
